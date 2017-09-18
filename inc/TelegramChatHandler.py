@@ -130,12 +130,12 @@ class TelegramChatHandler(telepot.helper.ChatHandler):
             self.bot.sendMessage(chat_id, status_msg, parse_mode='Markdown')
             return
 
-        if command == 'status':
-            self.crypto.set_requested_by(first_name)
+        if command == 'anton is god':
+            #self.crypto.set_requested_by(first_name)
             #self.bot.sendMessage(chat_id, "Duurt nog eventjes " + first_name)
-            status_msg = self.crypto.request_balances()
-            self.bot.sendMessage(chat_id, status_msg, parse_mode='Markdown')
-            self.bot.sendMessage(chat_id, "Dan weet je wie het gejinxed heeft!")
+            #status_msg = self.crypto.request_balances()
+            
+            self.bot.sendMessage(chat_id, "Dat klopt wel ja!")
         elif command == 'help':
             self.bot.sendMessage(chat_id, "<Hulp hier>")
 

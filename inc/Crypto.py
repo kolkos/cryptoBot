@@ -172,7 +172,7 @@ class Crypto(object):
         
         data = self.do_api_request(url)
 
-        balance_sat = float(data['balance'])
+        balance_sat = float(data['final_balance'])
         balance_coin = balance_sat * 0.00000001
 
         value = self.calculate_value(coin, balance_coin)
@@ -375,8 +375,18 @@ class Crypto(object):
                 second_to_last_line_values['requested_by'],
             )
             
-            return result_string
+            
+        else:
+            last_line = lines[-1]
+            last_line_values = self.parse_csv_line(last_line)
+            
+            result_string  = "Coin: *{}*\n".format(coin.upper())
+            result_string += "Huidige balans: `{}`\n".format(
+                last_line_values['balance_in_coins'],
+            )
+            result_string += "Huidige waarde: `{}` euro\n".format(
+                last_line_values['current_value'],
+            )
+            
 
-        
-
-        return
+        return result_string

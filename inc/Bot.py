@@ -59,5 +59,3 @@ class Bot(telepot.helper.ChatHandler):
         MessageLoop(self.cryptoBot).run_as_thread()
 
         print 'Listening ...'
-
-    
