@@ -13,6 +13,7 @@ import uuid
 import requests
 import json
 import sys
+import ConfigParser
 from datetime import datetime
 from collections import OrderedDict
 from General import General
@@ -35,7 +36,7 @@ class Crypto(object):
         self.requested_by = name
         return
 
-    def request_balances(self):
+    def request_balances(self, coin='all'):
         """
         This method loops through the keys in the CryptoCurrency section.
         """
@@ -51,9 +52,23 @@ class Crypto(object):
         start_time = time.time()
         self.general.logger(3, **kwargs)
 
-        # loop through the defined crypto's        
-        for coin in self.general.config.options('CryptoCurrency'):
-            self.request_coin_balance(coin)
+        # check if coin is set
+        if coin != 'all':
+            # check if the coin is in the config file
+            try:
+                dummy = self.general.config.get('CryptoCurrency', coin)
+                self.request_coin_balance(coin)
+                status_msg = self.create_status_message(coin)
+            except ConfigParser.NoOptionError:
+                status_msg = "Sorry ik ken de coin '{}' niet...".format(coin)
+                
+            
+        else:
+            # loop through the defined crypto's
+            status_msg = ""
+            for coin in self.general.config.options('CryptoCurrency'):
+                self.request_coin_balance(coin)
+                status_msg += self.create_status_message(coin)
 
         execution_time = time.time() - start_time
         kwargs = {
@@ -63,6 +78,8 @@ class Crypto(object):
             'execution_time': execution_time
         }
         self.general.logger(3, **kwargs)
+
+        return status_msg
 
     def do_api_request(self, url):
         """
@@ -285,6 +302,45 @@ class Crypto(object):
         }
         self.general.logger(3, **kwargs)
 
+    def parse_csv_line(self, line):
+        """
+        This method splits the line into usable values and returns them into a dict
+        """
+        result = {}
+
+        # remove the quotes
+        line = line.replace('"','')
+
+        # split the line by comma (,)
+        line_parts = line.split(',')
+
+        # now write the results into the dictionary
+        result['timestamp'] = str(line_parts[0])
+        result['requested_by'] = str(line_parts[1])
+        result['coin'] = str(line_parts[2])
+        result['balance_in_satoshi'] = float(line_parts[3])
+        result['balance_in_coins'] = float(line_parts[4])
+        result['current_value'] = float(line_parts[5])
+
+        return result
+
+    
+    def calculate_difference_percentage(self, old_value, new_value):
+        """
+        Method to calculate the difference between the previous value and the new
+        value. The result is a percentage (positive or negative).
+        """
+        percentage = (100 * new_value) / old_value
+        percentage = round(percentage, 3)
+        percentage = percentage - 100
+
+        percentage_string = "{}%".format(percentage)
+
+        if percentage > 0:
+            percentage_string = "+" + percentage_string
+
+        return percentage_string
+
     def create_status_message(self, coin):
         """
         Method to create status messages
@@ -292,6 +348,35 @@ class Crypto(object):
         file_name = coin + "_requests_rapport.csv"
 
         with open(file_name, "r") as fh:
-            last_line = fh.readlines()[-1]
+            lines = []
+            for line in fh:
+                line = line.replace('\n','')
+                lines.append(line)
+
+        # check if the number of lines is greater than two, if so we could calculate the difference
+        if len(lines) > 2:
+            last_line = lines[-1]
+            second_to_last_line = lines[-2]
+
+            last_line_values = self.parse_csv_line(last_line)
+            second_to_last_line_values = self.parse_csv_line(second_to_last_line)
+
+            result_string  = "Coin: *{}*\n".format(coin.upper())
+            result_string += "Huidige balans: `{}` ({})\n".format(
+                last_line_values['balance_in_coins'],
+                self.calculate_difference_percentage(second_to_last_line_values['balance_in_coins'], last_line_values['balance_in_coins'])
+            )
+            result_string += "Huidige waarde: `{}` euro ({})\n".format(
+                last_line_values['current_value'],
+                self.calculate_difference_percentage(second_to_last_line_values['current_value'], last_line_values['current_value'])
+            )
+            result_string += "Vorige keer opgevraagd _{}_ door *{}*\n\n".format(
+                second_to_last_line_values['timestamp'],
+                second_to_last_line_values['requested_by'],
+            )
             
+            return result_string
+
+        
+
         return
