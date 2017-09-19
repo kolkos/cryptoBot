@@ -112,6 +112,15 @@ class TelegramChatHandler(telepot.helper.ChatHandler):
         command = msg['text'].lower()
         print "{}: {}".format(first_name, str(command))
 
+        pattern = r'^(status)\s+(begin)$'
+        re_match = re.search(pattern, command)
+        if re_match is not None:
+            self.crypto.set_requested_by(first_name)
+            coin = re_match.group(2)
+            status_msg = self.crypto.request_balances('all', True)
+            self.bot.sendMessage(chat_id, status_msg, parse_mode='Markdown')
+            return
+        
         # use regex to extract the commands
         # start with status folowed by the coin
         pattern = r'^(status)\s+(\w+)$'

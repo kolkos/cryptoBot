@@ -64,7 +64,107 @@ class Database(object):
             'action': "Method finished",
             'execution_time': execution_time
         }
-        self.general.logger(
-            3,
-            **kwargs
-        )
+        self.general.logger(3, **kwargs)
+
+    def update_handler(self, query, values):
+        """
+        Method to update the database (INSERT, UPDATE and DELETE)
+        :param query: The (prepared) query to run
+        :param values: The actual values to use (an array of arrays)
+        """
+        kwargs = {
+            'class': self.__class__.__name__,
+            'method': self.update_handler.__name__,
+            'action': "Method called",
+            'query': query,
+            'values': values
+        }
+        self.general.logger(3, **kwargs)
+
+        start_time = time.time()
+
+        self.connect_db()
+        try:
+            self.cursor.executemany(query, values)
+            self.conn.commit()
+            self.conn.close()
+            kwargs = {
+                'class': self.__class__.__name__,
+                'method': self.update_handler.__name__,
+                'result': "Query successfull",
+            }
+            self.general.logger(2, **kwargs)
+        except sqlite3.Error as error:
+            kwargs = {
+                'class': self.__class__.__name__,
+                'method': self.update_handler.__name__,
+                'result': "Query error!",
+                'error': str(error)
+            }
+            self.general.logger(0, **kwargs)
+
+        execution_time = time.time() - start_time
+        kwargs = {
+            'class': self.__class__.__name__,
+            'method': self.update_handler.__name__,
+            'action': "Method finished",
+            'execution_time': execution_time
+        }
+        self.general.logger(3, **kwargs)
+
+    def select_handler(self, query, values=None):
+        """
+        Method to get results from the database
+        :param query: The (prepared) query to run
+        :param values: The actual values to use (an array of arrays)
+        :returns: a list with the result
+        """
+        kwargs = {
+            'class': self.__class__.__name__,
+            'method': self.select_handler.__name__,
+            'action': "Method called",
+            'query': query,
+            'values': values
+        }
+        self.general.logger(3, **kwargs)
+
+        start_time = time.time()
+
+        # connect to the database
+        self.connect_db()
+
+        # try to run the query
+        results = None
+        try:
+            if not values is None:
+                self.cursor.execute(query, values)
+            else:
+                self.cursor.execute(query)
+            results = self.cursor.fetchall()
+            self.conn.close()
+            kwargs = {
+                'class': self.__class__.__name__,
+                'method': self.select_handler.__name__,
+                'result': "Query successfull",
+            }
+            self.general.logger(2, **kwargs)
+
+        except sqlite3.Error as error:
+            kwargs = {
+                'class': self.__class__.__name__,
+                'method': self.select_handler.__name__,
+                'result': "Query error!",
+                'error': str(error)
+            }
+            self.general.logger(0, **kwargs)
+
+        execution_time = time.time() - start_time
+        kwargs = {
+            'class': self.__class__.__name__,
+            'method': self.update_handler.__name__,
+            'action': "Method finished",
+            'execution_time': execution_time
+        }
+        self.general.logger(3, **kwargs)
+        
+        return results

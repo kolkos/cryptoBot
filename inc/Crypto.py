@@ -17,6 +17,7 @@ import ConfigParser
 from datetime import datetime
 from collections import OrderedDict
 from General import General
+from Database import Database
 
 class Crypto(object):
     """
@@ -24,6 +25,7 @@ class Crypto(object):
     """
     def __init__(self):
         self.general = General()
+        self.database = Database()
         self.request_id = None
         self.coin_request_id = None
         self.requested_by = None
@@ -36,7 +38,7 @@ class Crypto(object):
         self.requested_by = name
         return
 
-    def request_balances(self, coin='all'):
+    def request_balances(self, coin='all', begin=False):
         """
         This method loops through the keys in the CryptoCurrency section.
         """
@@ -47,6 +49,7 @@ class Crypto(object):
             'class': self.__class__.__name__,
             'method': self.request_balances.__name__,
             'request_id': self.request_id,
+            'begin': begin,
             'action': "Method called"
         }
         start_time = time.time()
@@ -58,7 +61,7 @@ class Crypto(object):
             try:
                 dummy = self.general.config.get('CryptoCurrency', coin)
                 self.request_coin_balance(coin)
-                status_msg = self.create_status_message(coin)
+                status_msg = self.create_status_message(coin, begin)
             except ConfigParser.NoOptionError:
                 status_msg = "Sorry ik ken de coin '{}' niet...".format(coin)
                 
@@ -68,7 +71,7 @@ class Crypto(object):
             status_msg = ""
             for coin in self.general.config.options('CryptoCurrency'):
                 self.request_coin_balance(coin)
-                status_msg += self.create_status_message(coin)
+                status_msg += self.create_status_message(coin, begin)
 
         execution_time = time.time() - start_time
         kwargs = {
@@ -178,7 +181,7 @@ class Crypto(object):
         value = self.calculate_value(coin, balance_coin)
 
         # now write it to the rapport
-        self.write_balance_to_file(coin, balance_sat, balance_coin, value)
+        self.write_balance_to_database(coin, balance_sat, balance_coin, value)
 
         #print str(data)
         print "{} - {} - {} - {}".format(coin, balance_sat, balance_coin, value)
@@ -231,7 +234,7 @@ class Crypto(object):
         execution_time = time.time() - start_time
         kwargs = {
             'class': self.__class__.__name__,
-            'method': self.write_balance_to_file.__name__,
+            'method': self.calculate_value.__name__,
             'request_id': self.request_id,
             'coin_request_id': self.coin_request_id,
             'action': "Method finished",
@@ -242,18 +245,14 @@ class Crypto(object):
 
         return value
 
-    def write_balance_to_file(self, coin, balance_sat, balance_coin, current_value):
+    def write_balance_to_database(self, coin, balance_sat, balance_coin, current_value):
         """
-        This method writes the results of the api request to a csv file. This file could be
-        used in a later stage to create graphs or whatever. For now I just use this file
-        to send a status update to the group.
+        This methods writes te requested results to the database. This data will be used to create a
+        historic overview of the balance(s)
         """
-        # determine file name
-        file_name = coin + "_requests_rapport.csv"
-        
         kwargs = {
             'class': self.__class__.__name__,
-            'method': self.request_coin_balance.__name__,
+            'method': self.write_balance_to_database.__name__,
             'action': "Method called",
             'request_id': self.request_id,
             'coin_request_id': self.coin_request_id,
@@ -261,40 +260,23 @@ class Crypto(object):
             'balance_sat': balance_sat,
             'balance_coin': balance_coin,
             'current_value': current_value,
-            'file_name': file_name
         }
         start_time = time.time()
         self.general.logger(3, **kwargs)
+
+        # build query
+        query = "INSERT INTO requests"\
+              + "(requestedBy, coin, waardeSatoshi, waardeCoin, huidigeWaarde, currency)"\
+              + "VALUES (?, ?, ?, ?, ?, ?)"
         
-        # check if file exists, else create it by writing the fields to this file
-        pattern = '"{}","{}","{}","{}","{}","{}"\n'
-        if not os.path.exists(file_name):
-            title_string = pattern.format(
-                "Timestamp",
-                "Requested by",
-                "CryptoCoin",
-                "Balance in Satoshi",
-                "Balance as Coin",
-                "Current value"
-            )
-            self.general.append_to_file(file_name, title_string)
-        
-        # now write the result to the file
-        timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-        line = pattern.format(
-            timestamp,
-            self.requested_by,
-            coin,
-            balance_sat,
-            balance_coin,
-            current_value
-        )
-        self.general.append_to_file(file_name, line)
+        values = [(self.requested_by, coin, balance_sat, balance_coin, current_value, self.general.config.get('General', 'currency'))]
+
+        self.database.update_handler(query, values)
 
         execution_time = time.time() - start_time
         kwargs = {
             'class': self.__class__.__name__,
-            'method': self.write_balance_to_file.__name__,
+            'method': self.write_balance_to_database.__name__,
             'request_id': self.request_id,
             'coin_request_id': self.coin_request_id,
             'action': "Method finished",
@@ -302,6 +284,8 @@ class Crypto(object):
         }
         self.general.logger(3, **kwargs)
 
+        return
+    
     def parse_csv_line(self, line):
         """
         This method splits the line into usable values and returns them into a dict
@@ -324,7 +308,6 @@ class Crypto(object):
 
         return result
 
-    
     def calculate_difference_percentage(self, old_value, new_value):
         """
         Method to calculate the difference between the previous value and the new
@@ -341,7 +324,51 @@ class Crypto(object):
 
         return percentage_string
 
-    def create_status_message(self, coin):
+    def create_status_message(self, coin, begin):
+        """
+        This method creates the status message for telegram. It will calculate the difference between
+        the last two results.
+        """
+
+        # first request the second to last row
+        if begin:
+            query = "SELECT * FROM requests WHERE coin = ? ORDER BY id ASC LIMIT 1"
+            
+        else:
+            query = "SELECT * FROM"\
+                + " (SELECT * FROM requests WHERE coin = ? ORDER BY id DESC LIMIT 2) x"\
+                + " ORDER BY id LIMIT 1"
+        
+        values = (coin, )
+
+        results_previous = self.database.select_handler(query, values)
+
+        print "Second to last line:"
+        print json.dumps(results_previous, sort_keys=False, indent=6)
+
+        # Now get the last result
+        query = "SELECT * FROM requests WHERE coin = ? ORDER BY id DESC LIMIT 1"
+        results_now = self.database.select_handler(query, values)
+
+        # now generate the status message
+        result_string  = "Coin: *{}*\n".format(coin.upper())
+        result_string += "Huidige balans: `{}` ({})\n".format(
+            results_now[0][5],
+            self.calculate_difference_percentage(results_previous[0][5], results_now[0][5])
+        )
+        result_string += "Huidige waarde: `{}` euro ({})\n".format(
+            results_now[0][6],
+            self.calculate_difference_percentage(results_previous[0][6], results_now[0][6])
+        )
+        result_string += "Vorige keer opgevraagd _{}_ door *{}*\n\n".format(
+            results_previous[0][1],
+            results_previous[0][2],
+        )
+
+
+        return result_string
+    
+    def create_status_message_old(self, coin):
         """
         Method to create status messages
         """
