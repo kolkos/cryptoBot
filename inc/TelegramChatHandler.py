@@ -107,9 +107,10 @@ class TelegramChatHandler(telepot.helper.ChatHandler):
         if content_type != 'text':
             return
 
-        print json.dumps(msg, indent=6, sort_keys=True)
+        #print json.dumps(msg, indent=6, sort_keys=True)
         
         command = msg['text'].lower()
+        print "{}: {}".format(first_name, str(command))
 
         # use regex to extract the commands
         # start with status folowed by the coin

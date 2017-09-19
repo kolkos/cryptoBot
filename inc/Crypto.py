@@ -280,7 +280,7 @@ class Crypto(object):
             self.general.append_to_file(file_name, title_string)
         
         # now write the result to the file
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         line = pattern.format(
             timestamp,
             self.requested_by,
