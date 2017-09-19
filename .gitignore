@@ -1,0 +1,11 @@
+# pid files #
+#############
+*.pid
+
+# log files #
+#############
+*.log
+
+# python bin code #
+###################
+*.pyc
