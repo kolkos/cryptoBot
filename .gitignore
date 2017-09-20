@@ -9,3 +9,4 @@
 # python bin code #
 ###################
 *.pyc
+/target/
