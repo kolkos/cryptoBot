@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import com.google.gson.*;
 
 
-public class Coins {
+public class Coin {
 	private String coin;
 	private int currentBalanceSatoshi;
 	private float currentBalanceCoins;
@@ -17,13 +17,18 @@ public class Coins {
 	private HashMap<String, String> wallets;
 	public static String currency = "eur";
 	
+	//General general;
+	
 	/**
 	 * Initiate the class
 	 * @param coin: the name of the coin
 	 */
-	public Coins(String coin){
-		this.setCoin(coin);
+	public Coin(){
+		//this.setCoin(coin);
 		this.getWalletAddresses();
+		
+		//general = new General();
+		//general.loadProperties();
 	}
 	
 	/**
@@ -48,6 +53,11 @@ public class Coins {
 		return;
 	}
 	
+	public List<String> getWalletCoins() {
+		List<String> coins = new ArrayList<String>(this.wallets.keySet());
+		return coins;
+	}
+	
 	/**
 	 * Method to generate the API request URL for checking the balance	
 	 * @return: URL for requesting the wallet balance
@@ -58,6 +68,8 @@ public class Coins {
 		
 		// now generate the URL
 		String url = "https://api.blockcypher.com/v1/" + this.coin + "/main/addrs/" + this.wallets.get(this.coin) + "/balance";
+		
+		System.out.println(url);
 		
 		return url;
 	}
@@ -123,8 +135,7 @@ public class Coins {
 		}
 		
 		System.out.println(this.currentBalanceSatoshi);
-		
-		
+			
 	}
 	
 	public int getBalanceInSatoshi() {
