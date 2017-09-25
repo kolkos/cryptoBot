@@ -1,150 +1,130 @@
 package cryptoBot;
 
-
-import java.net.URL;
-import java.net.URLEncoder;
+import java.sql.ResultSet;
 import java.util.*;
-import org.json.JSONObject;
-
-import com.google.gson.*;
-
 
 public class Coin {
-	private String coin;
-	private int currentBalanceSatoshi;
-	private float currentBalanceCoins;
-	private float currentValue;
-	private HashMap<String, String> wallets;
-	public static String currency = "eur";
+	private String coinName;
+	private int totalBalanceSatoshi = 0;
+	private double totalBalanceCoin = 0;
+	private double totalCurrentValue = 0;
+	private List<String> walletAddresses;
+	private String currency = "eur";
+	private int requestID;
 	
-	//General general;
 	
-	/**
-	 * Initiate the class
-	 * @param coin: the name of the coin
-	 */
-	public Coin(){
-		//this.setCoin(coin);
-		this.getWalletAddresses();
+	public int getRequestID() {
+		return requestID;
+	}
+
+	public void setRequestID(int requestID) {
+		this.requestID = requestID;
+	}
+
+	public List<String> getWalletAddresses() {
+		return this.walletAddresses;
+	}
+
+	public void setWalletAddresses() {
+		this.receiveWalletAddresses();
+	}
+
+	public String getCoinName() {
+		return this.coinName;
+	}
+
+	public void setCoinName(String coinName) {
+		this.coinName = coinName;
+	}
+	
+	public int getTotalBalanceSatoshi() {
+		return this.totalBalanceSatoshi;
+	}
+	
+	public double getTotalBalanceCoin() {
+		return this.totalBalanceCoin;
+	}
+	
+	public double getTotalCurrentValue() {
+		return this.totalCurrentValue;
+	}
+	
+	private void receiveWalletAddresses() {
+		String query = "SELECT wallets.address AS walletAddress " + 
+				"FROM wallets, coins " + 
+				"WHERE wallets.coin_id = coins.id " + 
+				"AND coins.name = ?";
+		Object[] parameters = new Object[] {this.coinName};
+		MySQLAccess db = new MySQLAccess();
 		
-		//general = new General();
-		//general.loadProperties();
-	}
-	
-	/**
-	 * Method to set the coin type
-	 * @param coin
-	 */
-	public void setCoin(String coin) {
-		this.coin = coin;
-	}
-	
-	public String getCoin() {
-		return this.coin;
-	}
-	
-	/**
-	 * Method to configure the wallets
-	 */
-	private void getWalletAddresses() {
-		this.wallets = new HashMap<String, String>();
-		this.wallets.put("btc", "12st4BrVDSG4vJgkeXnPxvrSfnbHbdwGKT");
-		this.wallets.put("ltc", "LMWPhNFedT8e6X7iRQdh456hvZwYnxyStV");
-		return;
-	}
-	
-	public List<String> getWalletCoins() {
-		List<String> coins = new ArrayList<String>(this.wallets.keySet());
-		return coins;
-	}
-	
-	/**
-	 * Method to generate the API request URL for checking the balance	
-	 * @return: URL for requesting the wallet balance
-	 */
-	private String getBalanceCheckURL() {
-		// first get the wallet addresses
-		this.getWalletAddresses();
-		
-		// now generate the URL
-		String url = "https://api.blockcypher.com/v1/" + this.coin + "/main/addrs/" + this.wallets.get(this.coin) + "/balance";
-		
-		System.out.println(url);
-		
-		return url;
-	}
-	
-	/**
-	 * Method to generate the URL for the current value API request
-	 * @return URL for requesting the current coin value
-	 */
-	public String getCurrentValueURL() {
-		String url = "https://www.bitstamp.net/api/v2/ticker_hour/" + this.coin + this.currency + "/";
-				
-		return url;
-	}
-	
-	/**
-	 * Method to print the json response in a pretty way
-	 * @param jsonString: the JSON response string
-	 */
-	public void prettyPrintJSON(String jsonString) {
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-	    JsonParser jp = new JsonParser();
-	    JsonElement je = jp.parse(jsonString);
-	    String prettyJsonString = gson.toJson(je);
-	    System.out.println(prettyJsonString);
-	}
-	
-	/**
-	 * Method to get the JSON response from a URL
-	 * @param urlString: the url as a string
-	 * @return: json object
-	 * @throws Exception
-	 */
-	public JSONObject doAPIRequest(String urlString) throws Exception {
-		URL url = new URL(urlString);
-		
-		// read from the URL
-	    Scanner scan = new Scanner(url.openStream());
-	    String str = new String();
-	    while (scan.hasNext())
-	        str += scan.nextLine();
-	    scan.close();
-	    
-	    // build a JSON object
-	    JSONObject jsonObject = new JSONObject(str);
-	    
-	    // pretty print for debugging
-	    this.prettyPrintJSON(str);
-	    
-	    return jsonObject;
-	    
-	}
-	
-	/**
-	 * Method to get the current wallet balance. It sets the global variable
-	 */
-	public void getCurrentWalletBalance() {
 		try {
-			JSONObject json = this.doAPIRequest(this.getBalanceCheckURL());
-			this.currentBalanceSatoshi = (int) json.get("final_balance");
+			db.executeSelectQuery(query, parameters);
+			
+			ResultSet resultSet = db.getResultSet();
+			
+			this.walletAddresses = new ArrayList<>();
+			while (resultSet.next()) {
+				this.walletAddresses.add(resultSet.getString("walletAddress"));
+			}
+			
+			db.close();
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public void calculateCurrentTotalValuesForCoin() {
+		// loop through the addresses
 		
-		System.out.println(this.currentBalanceSatoshi);
+		for(String walletAddress : this.walletAddresses) {
+			//System.out.println(walletAddress);
 			
+			
+			// first set the necessary values
+			Wallet wallet = new Wallet();
+			wallet.setCurrency(this.currency);
+			wallet.setCoinName(this.coinName);
+			wallet.setRequestID(this.requestID);
+			wallet.setWalletAddress(walletAddress);
+			
+			// now get the current values from the api
+			wallet.getWalletValue();
+			
+			// now calculate the values
+			this.totalBalanceSatoshi += wallet.getBalanceSatoshi();
+			this.totalBalanceCoin += wallet.getBalanceCoin();
+			this.totalCurrentValue += wallet.getCurrentValue();
+			
+		}
 	}
 	
-	public int getBalanceInSatoshi() {
-		return this.currentBalanceSatoshi;
+	public void calculatePreviousTotalValuesForCoin(boolean sinceBegin) {
+		for(String walletAddress : this.walletAddresses) {
+			//System.out.println(walletAddress);
+			
+			// first set the necessary values
+			Wallet wallet = new Wallet();
+			wallet.setCurrency(this.currency);
+			wallet.setCoinName(this.coinName);
+			wallet.setWalletAddress(walletAddress);
+			
+			// now determine which method needs to be called
+			// this depends if the user wants to receive the first entry (the beginning) 
+			// or since the last request
+			if(sinceBegin) {
+				wallet.getFirstKnownValues();
+			}else {
+				wallet.getLastKnownValues();
+			}
+			
+			// now calculate the values
+			this.totalBalanceSatoshi += wallet.getBalanceSatoshi();
+			this.totalBalanceCoin += wallet.getBalanceCoin();
+			this.totalCurrentValue += wallet.getCurrentValue();
+			
+		}
 	}
 	
-	public void fakeAPIRequest() {
-		System.out.println("Coin:" + this.coin);
-		System.out.println(this.getBalanceCheckURL());
-		System.out.println(this.getCurrentValueURL());
-	}
 }

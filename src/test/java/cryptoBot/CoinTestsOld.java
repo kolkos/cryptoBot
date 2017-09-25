@@ -10,14 +10,14 @@ import org.junit.Test;
 
 
 
-public class CoinTests {
+public class CoinTestsOld {
 
 	
 	
 	@Test
 	public void testingLTC(){
 		String coin = "ltc";
-		Coin litecoin = new Coin();
+		CoinOld litecoin = new CoinOld();
 		litecoin.setCoin(coin);
 		
 		// check if the coin is set correctly

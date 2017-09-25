@@ -9,8 +9,10 @@ public class TestWallet {
 	@Test
 	public void testWallet() {
 		Wallet testWallet = new Wallet();
-		testWallet.setCoinName("btc");
-		testWallet.setWalletAddress("12st4BrVDSG4vJgkeXnPxvrSfnbHbdwGKT");
+		//testWallet.setCoinName("btc");
+		testWallet.setCoinName("ltc");
+		//testWallet.setWalletAddress("12st4BrVDSG4vJgkeXnPxvrSfnbHbdwGKT");
+		testWallet.setWalletAddress("LMWPhNFedT8e6X7iRQdh456hvZwYnxyStV");
 		testWallet.setCurrency("eur");
 		
 		testWallet.getWalletValue();

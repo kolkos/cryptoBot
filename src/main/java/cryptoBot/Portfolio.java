@@ -6,6 +6,8 @@ import java.util.*;
 public class Portfolio {
 	private List<String> coins;
 	
+	private double totalValuePortfolio;
+	
 	
 	public List<String> getCoins() {
 		return this.coins;
@@ -35,12 +37,16 @@ public class Portfolio {
 				coins.add(resultSet.getString("coinName"));
 			}
 			
+			db.close();
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 	}
+	
+	
 	
 	
 	

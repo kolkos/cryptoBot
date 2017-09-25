@@ -64,7 +64,7 @@ public class MySQLAccess {
 			
 			int i = 1;
 			for(Object x : parameters) {
-				System.out.println(x.toString());
+				//System.out.println(x.toString());
 				preparedStatement.setString(i, x.toString());
 				i++;
 			}

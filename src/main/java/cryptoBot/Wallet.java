@@ -18,8 +18,16 @@ public class Wallet {
 	private int balanceSatoshi;
 	private double balanceCoin;
 	private double currentValue;
+	private int requestID;
 	
-	
+	public int getRequestID() {
+		return this.requestID;
+	}
+
+	public void setRequestID(int requestID) {
+		this.requestID = requestID;
+	}
+
 	/**
 	 * Set the required currency eur/usd/etc
 	 * @param currency: the name of the currency
@@ -120,7 +128,7 @@ public class Wallet {
 	    JSONObject jsonObject = new JSONObject(str);
 	    
 	    // pretty print for debugging
-	    this.prettyPrintJSON(str);
+	    //this.prettyPrintJSON(str);
 	    
 	    return jsonObject;
 	}
@@ -144,6 +152,9 @@ public class Wallet {
 			
 			// now calculate the value of the wallet
 			this.calculateCurrentValue();
+			
+			// now register the result
+			this.registerCurrentResult();
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -221,6 +232,25 @@ public class Wallet {
 	 * Get the last known value of the coins 
 	 */
 	public void getLastKnownValues() {
+		/*
+		 * SELECT * FROM
+			(SELECT
+			results.balance_satoshi as balanceSatoshi,
+			results.balance_coin as balanceCoin,
+			results.current_value as currentValue,
+			results.currency as currency,
+			coins.name as coinName,
+			results.timestamp as timestamp
+			FROM results, coins, wallets
+			WHERE results.wallet_id = wallets.id
+			AND coins.id = wallets.coin_id
+			AND wallets.address = 'LMWPhNFedT8e6X7iRQdh456hvZwYnxyStV'
+			ORDER BY results.timestamp DESC
+			LIMIT 2)x
+			ORDER BY timestamp LIMIT 1
+		 */
+		
+		
 		// first get the last entry of the wallet
 		String query = "SELECT" + 
 				" results.balance_satoshi as balanceSatoshi," + 
@@ -258,6 +288,55 @@ public class Wallet {
 				" LIMIT 1";
 		
 		this.getWalletDetailsFromDB(query);
+		
+	}
+	
+	private int getWalletID() {
+		int walletID = 0;
+		
+		String query = "SELECT id FROM wallets WHERE address = ?";
+		Object[] parameters = new Object[] {this.walletAddress};
+		
+		MySQLAccess db = new MySQLAccess();
+		try {
+			db.executeSelectQuery(query, parameters);
+			
+			ResultSet resultSet = db.getResultSet();
+
+			// now register the received values
+			while (resultSet.next()) {
+				walletID = resultSet.getInt("id");
+			}
+			
+			db.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return walletID;
+	}
+	
+	public void registerCurrentResult() {
+		// check if the result needs to be registered
+		// this isn't necessary when getting the historic results
+
+		int walletID = this.getWalletID();
+		if(walletID != 0) {
+			String query = "INSERT INTO results "+
+		                   "(request_id, wallet_id, balance_satoshi, balance_coin, current_value, currency) " +
+		                   "VALUES (?, ?, ?, ?, ?, ?)";
+			Object[] parameters = new Object[] {this.requestID, walletID, this.balanceSatoshi, this.balanceCoin, this.currentValue, this.currency};
+			
+			MySQLAccess db = new MySQLAccess();
+			try {
+				db.executeUpdateQuery(query, parameters);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
 		
 	}
 	
