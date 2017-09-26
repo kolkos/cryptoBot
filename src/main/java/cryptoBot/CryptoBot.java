@@ -66,7 +66,10 @@ public class CryptoBot extends TelegramLongPollingBot {
 			
 			long messageID = update.getCallbackQuery().getMessage().getMessageId();
 			long chatID = update.getCallbackQuery().getMessage().getChatId();
-			String firstName = update.getCallbackQuery().getMessage().getFrom().getFirstName();
+			//String firstName = update.getCallbackQuery().getMessage().getFrom().getFirstName();
+			String firstName = update.getCallbackQuery().getFrom().getFirstName();
+			
+			System.out.println(firstName);
 			
 			BotRequest callbackRequest = new BotRequest();
 			callbackRequest.registerCallbackQuery(chatID, messageID, firstName, callData);
@@ -88,11 +91,6 @@ public class CryptoBot extends TelegramLongPollingBot {
 	}
 	
 	
-
-	
-
-
-
 	@Override
 	public String getBotUsername() {
 		// TODO

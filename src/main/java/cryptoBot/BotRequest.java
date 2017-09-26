@@ -77,6 +77,11 @@ public class BotRequest {
 				.setCallbackData("method=getPortfolioCoins"));
 		rowsInline.add(rowInline);
 		
+		rowInline = new ArrayList<>();
+		rowInline.add(new InlineKeyboardButton().setText("Wallets opvragen")
+				.setCallbackData("method=getWallets"));
+		rowsInline.add(rowInline);
+		
 		// Add it to the message
 		markupInline.setKeyboard(rowsInline);
 		message.setReplyMarkup(markupInline);		
@@ -97,7 +102,7 @@ public class BotRequest {
 		return parameters;
 	}
 	
-	public boolean checkCallDataComplete(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
+	private boolean checkCallDataComplete(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
 		boolean checkOK = true;
 		// loop through the required keys
 		for(String requiredKey: requiredKeys) {
@@ -130,7 +135,7 @@ public class BotRequest {
 				message = this.getPortfolioCoins();
 				break;
 			case "getHelpText":
-				System.out.println("Todo");
+				message = this.getHelpTextEdit();
 				break;
 			case "getCoinValueOptions":
 				requiredKeys.add("coinName");
@@ -141,6 +146,9 @@ public class BotRequest {
 				requiredKeys.add("since");
 				message = this.getCoinValue(requiredKeys, callDataDetails);
 				break;
+			case "getWallets":
+				message = this.getWallets();
+				break;
 			default:
 				message = this.generateErrorMessage("Nog niet af!");
 				
@@ -149,6 +157,23 @@ public class BotRequest {
 		
 		return message;
 		
+		
+	}
+	
+	private EditMessageText getWallets() {
+		Request request = new Request();
+		request.setRequestedBy(this.firstName);
+		
+		request.handleWalletRequest();
+		
+		String statusMessage = request.getStatusMessage();
+		
+		EditMessageText message = new EditMessageText()
+                .setChatId(this.chatID)
+                .setMessageId(toIntExact(this.messageID))
+                .setText(statusMessage);
+		
+		return message;
 		
 	}
 	
@@ -164,7 +189,7 @@ public class BotRequest {
 		request.setRequestedBy(this.firstName);
 		request.setRequestedCoins(callDataDetails.get("coinName"));
 		request.setCalculateSince(callDataDetails.get("since"));
-		request.handleRequest();
+		request.handleCoinRequest();
 		
 		String statusMessage = request.getStatusMessage();
 		
@@ -258,8 +283,38 @@ public class BotRequest {
 		return message;
 	}
 	
+	private String generateHelpText() {
+		String messageText = "Op dit moment kun je de volgende commando's uitvoeren:\n";
+		messageText += "- *bot* => open het menu\n";
+		//messageText += "- /registerCoin <afkorting> <coin naam> => Registreren van een nieuwe coin\n";
+		//messageText += "- /registerWallet <afkorting coin> <wallet adres> => Registreren van nieuwe wallet";
+		messageText += "- /help => verkrijg deze helptekst";
+		//messageText += "- /registerDeposit <wallet adres> <aantal coins> <> => Registreren van nieuwe wallet";
+		
+		
+		return messageText;
+	}
 	
+	private SendMessage getHelpTextSend() {
+		String messageText = this.generateHelpText();
+		
+		SendMessage message = new SendMessage() // Create a message object object
+				.setChatId(chatID).setText(messageText);
+		
+		return message;
+	}
 	
+	private EditMessageText getHelpTextEdit() {
+		String messageText = this.generateHelpText();
+		
+		EditMessageText message = new EditMessageText()
+                .setChatId(this.chatID)
+                .setMessageId(toIntExact(this.messageID))
+                .setText(messageText);
+		
+		return message;
+		
+	}
 	
 	private EditMessageText generateErrorMessage(String messageText) {
 		EditMessageText message = new EditMessageText()
