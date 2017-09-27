@@ -6,7 +6,7 @@ import java.util.*;
 
 import org.junit.Test;
 
-public class CoinTest {
+public class TestCoin {
 
 	@Test
 	public void testCoins() {
