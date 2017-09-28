@@ -1,7 +1,6 @@
 package cryptoBot;
 
 import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 public class TestWallet {
@@ -39,9 +38,9 @@ public class TestWallet {
 		System.out.println("Coins: " + testWallet.getBalanceCoin());
 		System.out.println("Value: " + testWallet.getCurrentValue());
 		
-		int expectedSatoshi = 734343;
+		int expectedSatoshi = 2288906;
 		double expectedCoins = 0.00734343;
-		double expectedValue = 24.87;
+		double expectedValue = 80.34;
 		
 		assertEquals(expectedSatoshi, testWallet.getBalanceSatoshi());
 		assertEquals(expectedCoins, testWallet.getBalanceCoin(), 2);

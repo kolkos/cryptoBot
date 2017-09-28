@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.*;
 
 import java.util.prefs.*;
@@ -25,7 +26,13 @@ import java.lang.reflect.Method;
 import static java.lang.Math.toIntExact;
 
 public class CryptoBot extends TelegramLongPollingBot {
-
+	private Properties properties;
+	
+	public CryptoBot() {
+		General general = new General();
+		this.properties = general.getProperties();
+	}
+	
 	@Override
 	public void onUpdateReceived(Update update) {
 		if (update.hasMessage() && update.getMessage().hasText()) {
@@ -69,8 +76,6 @@ public class CryptoBot extends TelegramLongPollingBot {
 			//String firstName = update.getCallbackQuery().getMessage().getFrom().getFirstName();
 			String firstName = update.getCallbackQuery().getFrom().getFirstName();
 			
-			System.out.println(firstName);
-			
 			BotRequest callbackRequest = new BotRequest();
 			callbackRequest.registerCallbackQuery(chatID, messageID, firstName, callData);
 			
@@ -93,14 +98,11 @@ public class CryptoBot extends TelegramLongPollingBot {
 	
 	@Override
 	public String getBotUsername() {
-		// TODO
-		return "geenGezeikIedereenRijkBot";
+		return this.properties.getProperty("bot_username");
 	}
 
 	@Override
 	public String getBotToken() {
-		// TODO
-
-		return "429491716:AAHJIRsPvRkRzpYRIdznxZEXgIJtYZm77M0";
+		return this.properties.getProperty("bot_token");
 	}
 }

@@ -92,7 +92,6 @@ public class BotRequest {
 	private HashMap<String, String> parseCallData(){
 		HashMap<String, String> parameters = new HashMap<>();
 		String[] keyValuePairs = this.command.split(",");
-		System.out.println("parseCallData() this.command: " + this.command);
 		for(String keyValuePair : keyValuePairs) {
 			String[] keyValueParts = keyValuePair.split("=");
 			String key = keyValueParts[0];
@@ -127,8 +126,6 @@ public class BotRequest {
 		
 		// now get the method
 		String method = callDataDetails.get("method");
-		
-		System.out.println(method);
 		
 		switch(method) {
 			case "getPortfolioCoins":

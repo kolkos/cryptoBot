@@ -79,7 +79,6 @@ public class Request {
 		if(this.requestedCoin.equals("all")) {
 			// all coins will result in a loop through the coins in the database
 			for(String coinName : portfolio.getCoins()) {
-				System.out.println(coinName);
 				this.runCoinRequest(coinName);
 				this.generateStatusMessageForCoin(coinName);
 			}
@@ -88,7 +87,7 @@ public class Request {
 				this.runCoinRequest(this.requestedCoin);
 				this.generateStatusMessageForCoin(this.requestedCoin);
 			}else {
-				System.out.println("Coin bestaat niet");
+				this.statusMessage += "Deze coin bestaat niet!";
 			}
 		}
 		

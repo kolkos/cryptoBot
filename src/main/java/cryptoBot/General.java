@@ -4,12 +4,20 @@ import java.io.*;
 import java.util.*;
 
 public class General {
-	Properties properties;
+	private Properties properties;
 	
+	public General() {
+		this.loadProperties();
+	}
 	
+	public Properties getProperties() {
+		return properties;
+	}
+
 	
-	
-	public void loadProperties() {
+
+
+	private void loadProperties() {
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		
 		properties = new Properties();
@@ -23,7 +31,7 @@ public class General {
 			while (e.hasMoreElements()) {
 				String key = (String) e.nextElement();
 				String value = properties.getProperty(key);
-				System.out.println("Key : " + key + ", Value : " + value);
+				//System.out.println("Key : " + key + ", Value : " + value);
 			}
 			
 		}catch (IOException e) {
