@@ -1,0 +1,22 @@
+Application:        cryptoBot
+
+Version:            v0.2
+Last update on:     30-09-2017
+Last updates by:    Anton (@Kolkos)
+
+------------
+
+Changes
+Version:            v0.2
+Date                30-09-2017
+Changes:
+  - Added automatic request job:
+    * The bot now request the status of the portfolio every hour;
+    * The bot sends a status update to all registered groups ;
+      somewhere between 12:00 and 13:00;
+    * Outside this time window the bot just registers the result
+      in the database;
+  - Added the /version command (show this text);
+  - Added a shortcut to request the portfolio since the last request
+    
+------------
