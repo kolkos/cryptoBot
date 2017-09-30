@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.prefs.*;
 import java.util.regex.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.ResultSet;
 
 import static java.lang.Math.toIntExact;
 
@@ -40,8 +42,11 @@ public class CryptoBot extends TelegramLongPollingBot {
 			String incomingMessageText = update.getMessage().getText();
 			long chatID = update.getMessage().getChatId();
 
+			//System.out.println("chatid=" + chatID);
+			
 			// make the message lowercase
-			incomingMessageText.toLowerCase();
+			incomingMessageText = incomingMessageText.toLowerCase();
+			//System.out.println(incomingMessageText);
 
 			Pattern patternBot = Pattern.compile(".*bot.*");
 			Matcher matcher = patternBot.matcher(incomingMessageText);
@@ -93,6 +98,64 @@ public class CryptoBot extends TelegramLongPollingBot {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public void automaticStatusUpdatePortfolio() {
+		Request request = new Request();
+		request.setRequestedCoins("all");
+		request.setRequestedBy("cryptoBot");
+		request.handleCoinRequest();
+				
+		// now check if the message needs to be send
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(new Date());
+		int hour = cal.get(Calendar.HOUR_OF_DAY);  //Get the hour from the calendar
+		
+		System.out.println("Auto taak");
+		System.out.println(cal.getTime());
+		
+		// Check if hour is between 12 and 13
+		// if so send the message
+		if(hour >= 12 && hour < 13)               
+		{
+			// get the chats from the db to determine where to send the updates to
+			String query = "SELECT chat_id FROM chats WHERE active = ? AND receive_update = ?";
+			Object[] parameters = new Object[] {1, 1};
+			MySQLAccess db = new MySQLAccess();
+			try {
+				db.executeSelectQuery(query, parameters);
+				// get the results
+				ResultSet resultSet = db.getResultSet();
+				
+				String statusMessageAppendix = String.format("Hallo lieve kijkbuiskindertjes! De update van ongeveer %d uur is hier!\n\n", hour);
+				request.appendToStatusMessage(statusMessageAppendix);
+				
+				while (resultSet.next()) {
+					long chatID = resultSet.getLong("chat_id");
+					
+					
+					
+					SendMessage message = new SendMessage() // Create a message object object
+							.setChatId(chatID).setText(request.getStatusMessage());
+					
+					try {
+						sendMessage(message); // Sending our message object to user
+					} catch (TelegramApiException e) {
+						System.out.println("Niet toegevoegd aan chat: " + chatID);
+					}
+					
+					
+				}
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			
+			
+		}
+		
+		
 	}
 	
 	

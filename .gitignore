@@ -1,12 +1,11 @@
-# pid files #
-#############
-*.pid
-
 # log files #
 #############
 *.log
 
-# python bin code #
+# properties file #
 ###################
-*.pyc
+*.properties
+
+# build folder #
+################
 /target/

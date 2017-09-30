@@ -13,6 +13,9 @@ public class TestGeneral {
 		General general = new General();
 		Properties prop = general.getProperties();
 		System.out.println(prop.getProperty("bot_token"));
+		
+		assertEquals("Waarschijnlijk heb je de testbot token gebruikt!", "429491716:AAHJIRsPvRkRzpYRIdznxZEXgIJtYZm77M0", prop.getProperty("bot_token"));
+		
 	}
 
 }

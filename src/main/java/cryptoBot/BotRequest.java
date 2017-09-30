@@ -3,6 +3,7 @@ package cryptoBot;
 import static java.lang.Math.toIntExact;
 
 import java.lang.reflect.Method;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,10 +45,34 @@ public class BotRequest {
 		this.command = command;
 	}
 	
+	public void registerChat() throws Exception {
+		// check if the chat is already registered
+		String query = "SELECT chat_id FROM chats WHERE chat_id = ?";
+		Object[] parameters = new Object[] {this.chatID};
+		MySQLAccess db = new MySQLAccess();
+		db.executeSelectQuery(query, parameters);
+		
+		ResultSet resultSet = db.getResultSet();
+		
+		if(resultSet.next() == false){
+			// the chat is not registered, register it
+			query = "INSERT INTO chats (chat_id) VALUES (?)";
+			parameters = new Object[] {this.chatID};
+			// run the query
+			db.executeUpdateQuery(query, parameters);
+		}
+	}
+	
 	public void registerChatMessage(long chatID, String firstName, String command) {
 		this.setChatID(chatID);
 		this.setFirstName(firstName);
 		this.setCommand(command);
+		try {
+			this.registerChat();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public void registerCallbackQuery(long chatID, long messageID, String firstName, String command) {
@@ -58,7 +83,7 @@ public class BotRequest {
 	}
 	
 	public SendMessage getBotOptions() {
-		String messageText = String.format("Hoi %s, je kunt kiezen uit de volgende opties:", this.firstName);
+		String messageText = String.format("IEMAND ZEI BOT!\n\nHoi %s, je kunt kiezen uit de volgende opties:", this.firstName);
 		
 		SendMessage message = new SendMessage() // Create a message object object
 				.setChatId(chatID).setText(messageText);
@@ -80,6 +105,11 @@ public class BotRequest {
 		rowInline = new ArrayList<>();
 		rowInline.add(new InlineKeyboardButton().setText("Wallets opvragen")
 				.setCallbackData("method=getWallets"));
+		rowsInline.add(rowInline);
+		
+		rowInline = new ArrayList<>();
+		rowInline.add(new InlineKeyboardButton().setText("Frank is een zeikert")
+				.setCallbackData("method=getCoinValue,coinName=all,since=last"));
 		rowsInline.add(rowInline);
 		
 		// Add it to the message
@@ -291,6 +321,8 @@ public class BotRequest {
 		
 		return messageText;
 	}
+	
+	 
 	
 	private SendMessage getHelpTextSend() {
 		String messageText = this.generateHelpText();

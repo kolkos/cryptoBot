@@ -29,6 +29,9 @@ public class TestCoin {
 		
 		ltc.calculateCurrentTotalValuesForCoin();
 		
+		assertEquals("ltc", ltc.getCoinName());
+		
+		
 		System.out.println("Satoshi: " + ltc.getTotalBalanceSatoshi());
 		System.out.println("Coin: " + ltc.getTotalBalanceCoin());
 		System.out.println("Value: " + ltc.getTotalCurrentValue());
@@ -41,11 +44,17 @@ public class TestCoin {
 		ltc.setCoinName("btc");
 		ltc.setWalletAddresses();
 		
-		ltc.calculatePreviousTotalValuesForCoin(false);
+		ltc.calculatePreviousTotalValuesForCoin(true);
 		
 		System.out.println("Satoshi: " + ltc.getTotalBalanceSatoshi());
 		System.out.println("Coin: " + ltc.getTotalBalanceCoin());
 		System.out.println("Value: " + ltc.getTotalCurrentValue());
+		
+		assertEquals(734343, ltc.getTotalBalanceSatoshi());
+		assertEquals(0.00734343, ltc.getTotalBalanceCoin(), 10);
+		assertEquals(24.87, ltc.getTotalCurrentValue(), 10);
+		
+		
 		
 	}
 

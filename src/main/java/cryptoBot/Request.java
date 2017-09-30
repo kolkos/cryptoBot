@@ -60,6 +60,12 @@ public class Request {
 		return this.statusMessage;
 	}
 	
+	public void appendToStatusMessage(String message) {
+		String statusMessageBuffer = message + this.statusMessage;
+		
+		this.statusMessage = statusMessageBuffer;
+	}
+	
 	public void handleCoinRequest() {
 		// get the available coins
 		Portfolio portfolio = new Portfolio();
@@ -250,7 +256,7 @@ public class Request {
 	}
 	
 	private void addLastRequestedByToMessage() {
-		this.statusMessage += String.format("Laatste aanvraag door %s. Vanaf nu kun je %s de schuld geven als het mis gaat...", this.requestedBy, this.requestedBy);
+		this.statusMessage += String.format("Laatste aanvraag door %s. Vanaf nu kun je %s de schuld geven als het mis gaat...", this.lastRequestedBy, this.requestedBy);
 	}
 	
 	public void getLastRequestedBy() {

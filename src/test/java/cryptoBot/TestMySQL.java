@@ -2,6 +2,8 @@ package cryptoBot;
 
 import static org.junit.Assert.*;
 
+import java.sql.ResultSet;
+
 import org.junit.Test;
 
 public class TestMySQL {
@@ -17,36 +19,20 @@ public class TestMySQL {
 		
 		try {
 			db.executeSelectQuery(q, parameters);
+			
+			ResultSet resultSet = db.getResultSet();
+			
+			
+			assertEquals(true, resultSet.next());
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			
-			
+			fail("Database error!");
+						
 		}
 		
-		q = "SELECT wallets.address AS walletAddress, coins.name AS coinName FROM wallets, coins WHERE wallets.coin_id = coins.id AND coins.name = ? AND coins.id = ?";
-		parameters = new Object[] {"ltc", 2};
 		
-		try {
-			db.executeSelectQuery(q, parameters);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			
-			
-		}
-		
-		q = "SELECT wallets.address AS walletAddress, coins.name AS coinName FROM wallets, coins WHERE wallets.coin_id = coins.id";
-		parameters = new Object[] {};
-		
-		try {
-			db.executeSelectQuery(q, parameters);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		//q = "INSERT INTO ";
 		
 	}
 

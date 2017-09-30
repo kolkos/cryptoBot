@@ -2,6 +2,8 @@ package cryptoBot;
 
 import static org.junit.Assert.*;
 
+import java.sql.ResultSet;
+
 import org.junit.Test;
 
 public class TestRequests {
@@ -27,5 +29,7 @@ public class TestRequests {
 		
 		System.out.println(request.getStatusMessage());
 	}
+	
+	
 
 }

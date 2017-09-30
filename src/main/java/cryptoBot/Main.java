@@ -1,6 +1,8 @@
 package cryptoBot;
 
-
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
@@ -22,6 +24,16 @@ public class Main {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+        
+        ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
+        ses.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                CryptoBot sendBot = new CryptoBot();
+                sendBot.automaticStatusUpdatePortfolio();
+            }
+        }, 0, 1, TimeUnit.HOURS);
+        
     }
 	
 }
