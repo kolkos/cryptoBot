@@ -150,6 +150,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 			// run the query
 			db.executeUpdateQuery(query, parameters);
 		}
+		
+		db.close();
 	}
 	
 	/**
@@ -174,12 +176,14 @@ public class CryptoBot extends TelegramLongPollingBot {
 				this.sendMessageToChat(chatID, messageText);
 				return false;
 			}
-			
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			// error found, for safety reasons return false
 			e1.printStackTrace();
+			db.close();
 			return false;
+		}finally {
+			db.close();
 		}
 		// if the code reaches this part, the chat is allowed to send messages
 		return true;
@@ -234,6 +238,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
+			}finally {
+				db.close();
 			}
 		}
 	}

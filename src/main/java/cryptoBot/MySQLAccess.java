@@ -20,7 +20,11 @@ public class MySQLAccess {
 	private ResultSet resultSet = null;
 	private List<HashMap<String, String>> results;
 	
-	
+	/**
+	 * Connect to the database
+	 * @throws SQLException
+	 * @throws ClassNotFoundException
+	 */
 	public void connectDatabase() throws SQLException, ClassNotFoundException {
 		Class.forName("com.mysql.jdbc.Driver");
 		
@@ -33,7 +37,12 @@ public class MySQLAccess {
 		connect = DriverManager.getConnection(url);
 	}
 	
-	
+	/**
+	 * Method to run a select query. This method runs prepared statements. The results are set to the resultSet variable
+	 * @param query the SQL query to run
+	 * @param parameters options for the prepared statement
+	 * @throws Exception
+	 */
 	public void executeSelectQuery(String query, Object[] parameters) throws Exception {
 		// String query, String[] parameters
 		this.connectDatabase();
@@ -55,6 +64,12 @@ public class MySQLAccess {
         }
 	}
 	
+	/**
+	 * Method to execute a update/insert/delete statement to the database
+	 * @param query prepared query to run
+	 * @param parameters values for the prepared query
+	 * @throws Exception
+	 */
 	public void executeUpdateQuery(String query, Object[] parameters) throws Exception {
 		//connect
 		this.connectDatabase();
@@ -77,11 +92,17 @@ public class MySQLAccess {
 		
 	}
 	
+	/**
+	 * Method to return the current resultset
+	 * @return resultset with (or without) values of the selecct query
+	 */
 	public ResultSet getResultSet() {
 		return this.resultSet;
 	}
 
-	// You need to close the resultSet
+	/**
+	 * Close the current call
+	 */
     public void close() {
         try {
             if (resultSet != null) {

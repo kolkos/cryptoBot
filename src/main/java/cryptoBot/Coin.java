@@ -17,6 +17,10 @@ public class Coin {
 		return requestID;
 	}
 
+	/**
+	 * Register the ID of the incoming request
+	 * @param requestID
+	 */
 	public void setRequestID(int requestID) {
 		this.requestID = requestID;
 	}
@@ -49,6 +53,9 @@ public class Coin {
 		return this.totalCurrentValue;
 	}
 	
+	/**
+	 * Method to get the wallet addresses from the database
+	 */
 	private void receiveWalletAddresses() {
 		String query = "SELECT wallets.address AS walletAddress " + 
 				"FROM wallets, coins " + 
@@ -75,6 +82,9 @@ public class Coin {
 		}
 	}
 	
+	/**
+	 * This method calculates the value from the found wallets
+	 */
 	public void calculateCurrentTotalValuesForCoin() {
 		// loop through the addresses
 		
@@ -92,7 +102,7 @@ public class Coin {
 			// now get the current values from the api
 			wallet.getWalletValue();
 			
-			// now calculate the values
+			// now append the value from the current wallet to the total coin values
 			this.totalBalanceSatoshi += wallet.getBalanceSatoshi();
 			this.totalBalanceCoin += wallet.getBalanceCoin();
 			this.totalCurrentValue += wallet.getCurrentValue();
@@ -100,6 +110,11 @@ public class Coin {
 		}
 	}
 	
+	/**
+	 * Get the values from the coins from the database (results table)
+	 * These values are used to compare the current value to
+	 * @param sinceBegin depending on this value it will get the last or the first value
+	 */
 	public void calculatePreviousTotalValuesForCoin(boolean sinceBegin) {
 		for(String walletAddress : this.walletAddresses) {
 			//System.out.println(walletAddress);

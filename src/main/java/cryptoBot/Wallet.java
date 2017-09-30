@@ -220,11 +220,11 @@ public class Wallet {
 				this.currentValue = resultSet.getDouble("currentValue");
 			}
 			
-			db.close();
-			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			db.close();
 		}
 	}
 	
@@ -308,15 +308,19 @@ public class Wallet {
 				walletID = resultSet.getInt("id");
 			}
 			
-			db.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			db.close();
 		}
 		
 		return walletID;
 	}
 	
+	/**
+	 * Register the current result
+	 */
 	public void registerCurrentResult() {
 		// check if the result needs to be registered
 		// this isn't necessary when getting the historic results
@@ -334,6 +338,8 @@ public class Wallet {
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}finally {
+				db.close();
 			}
 			
 		}

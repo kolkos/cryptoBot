@@ -206,6 +206,8 @@ public class Request {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			db.close();
 		}
 	}
 	
@@ -222,11 +224,12 @@ public class Request {
 				requestID = resultSet.getInt("id");
 			}
 			
-			db.close();
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			db.close();
 		}
 		
 	}
@@ -272,11 +275,11 @@ public class Request {
 				this.lastRequestedBy = resultSet.getString("name");
 			}
 			
-			db.close();
-			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			db.close();
 		}
 		
 	}

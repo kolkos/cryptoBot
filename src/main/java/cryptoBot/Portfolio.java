@@ -49,6 +49,8 @@ public class Portfolio {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			db.close();
 		}
 		
 	}
@@ -81,6 +83,8 @@ public class Portfolio {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}finally {
+			db.close();
 		}
 	}
 	

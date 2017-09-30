@@ -16,7 +16,9 @@ public class General {
 
 	
 
-
+	/**
+	 * Load the properties (configuration) from the database
+	 */
 	private void loadProperties() {
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		
