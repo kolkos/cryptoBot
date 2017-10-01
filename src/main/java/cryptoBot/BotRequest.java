@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -19,6 +21,8 @@ public class BotRequest {
 	private long chatID;
 	private long messageID;
 	private String command;
+	
+	private static final Logger LOG = LogManager.getLogger(BotRequest.class);
 	
 	/**
 	 * Get the first name from the requester
@@ -91,6 +95,7 @@ public class BotRequest {
 	 * @param command the incoming chat message/command
 	 */
 	public void registerChatMessage(long chatID, String firstName, String command) {
+		LOG.trace("entered registerChatMessage(): chat_id={}, firstName={}, command={}", chatID, firstName, command);
 		this.setChatID(chatID);
 		this.setFirstName(firstName);
 		this.setCommand(command);
@@ -104,6 +109,8 @@ public class BotRequest {
 	 * @param command the value of the inline keyboard button
 	 */
 	public void registerCallbackQuery(long chatID, long messageID, String firstName, String command) {
+		
+		LOG.trace("entered registerCallbackQuery(): chat_id={}, messageID={}, firstName={}, command={}", chatID, messageID, firstName, command);
 		this.setChatID(chatID);
 		this.setMessageID(messageID);
 		this.setFirstName(firstName);
@@ -116,6 +123,7 @@ public class BotRequest {
 	 * @return a new message to send to the chat 
 	 */
 	public SendMessage getBotOptions() {
+		LOG.trace("entered getBotOptions()");
 		String messageText = String.format("IEMAND ZEI BOT!\n\nHoi %s, je kunt kiezen uit de volgende opties:", this.firstName);
 		
 		// Create a message object object
@@ -159,6 +167,9 @@ public class BotRequest {
 		markupInline.setKeyboard(rowsInline);
 		message.setReplyMarkup(markupInline);		
 		
+		LOG.trace("message={}", message);
+		LOG.trace("finished getBotOptions()");
+		
 		// return the message
 		return message;
 	}
@@ -168,6 +179,7 @@ public class BotRequest {
 	 * @return a HashMap which contains key/value pairs from the incoming callback query
 	 */
 	private HashMap<String, String> parseCallData(){
+		LOG.trace("entered parseCallData()");
 		HashMap<String, String> parameters = new HashMap<>();
 		String[] keyValuePairs = this.command.split(",");
 		for(String keyValuePair : keyValuePairs) {
@@ -175,7 +187,9 @@ public class BotRequest {
 			String key = keyValueParts[0];
 			String value = keyValueParts[1];
 			parameters.put(key, value);
+			LOG.trace("added {} => {}", key, value);
 		}
+		LOG.trace("finished parseCallData()");
 		return parameters;
 	}
 	
@@ -187,6 +201,8 @@ public class BotRequest {
 	 * @return
 	 */
 	private boolean checkCallDataComplete(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
+		LOG.trace("entered checkCallDataComplete()");
+		
 		// by default the check is OK
 		boolean checkOK = true;
 		
@@ -197,6 +213,8 @@ public class BotRequest {
 				checkOK = false;
 			}
 		}
+		LOG.info("call data check ok: {}", checkOK);
+		LOG.trace("finished checkCallDataComplete()");
 		
 		return checkOK;
 	}
@@ -208,6 +226,7 @@ public class BotRequest {
 	 * @return
 	 */
 	public EditMessageText runCallbackQueryCommand() {
+		LOG.trace("entered runCallbackQueryCommand()");
 		HashMap<String, String> callDataDetails = this.parseCallData();
 		
 		// message is the object which is returned to the calling method
@@ -216,6 +235,7 @@ public class BotRequest {
 		// check if method is set
 		if(! callDataDetails.containsKey("method")) {
 			message = this.generateErrorMessage("Method niet gevonden in callback query");
+			LOG.warn("method not found in callback data!");
 			return message;
 		}
 		
@@ -224,6 +244,7 @@ public class BotRequest {
 		
 		// now get the method
 		String method = callDataDetails.get("method");
+		LOG.info("found method {} in callback query", method);
 		
 		// call the correct method depending on the given method
 		switch(method) {
@@ -251,6 +272,8 @@ public class BotRequest {
 				
 		}
 		
+		LOG.trace("generated EditTextMessage: {}", message);
+		LOG.trace("finished runCallbackQueryCommand()");
 		// now return the generated message
 		return message;
 		
@@ -262,6 +285,8 @@ public class BotRequest {
 	 * @return status message which contains the current values of the registered wallets
 	 */
 	private EditMessageText getWallets() {
+		LOG.trace("entered getWallets()");
+		
 		Request request = new Request();
 		request.setRequestedBy(this.firstName);
 		
@@ -273,6 +298,8 @@ public class BotRequest {
                 .setChatId(this.chatID)
                 .setMessageId(toIntExact(this.messageID))
                 .setText(statusMessage);
+		
+		LOG.trace("finished getWallets()");
 		
 		return message;
 		
@@ -288,9 +315,12 @@ public class BotRequest {
 	 * @return a status message (depending on the chosen options) with the current value of the portfolio (by coin)
 	 */
 	private EditMessageText getCoinValue(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
+		LOG.trace("entered getCoinValue()");
+		
 		// check if the call is complete
 		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
 			EditMessageText message = this.generateErrorMessage("Commando niet compleet");
+			LOG.warn("Not all required keys are found for getCoinValue()");
 			return message;
 		}
 		
@@ -308,6 +338,8 @@ public class BotRequest {
                 .setMessageId(toIntExact(this.messageID))
                 .setText(statusMessage);
 		
+		LOG.trace("finished getCoinValue()");
+		
 		return message;
 	}
 	
@@ -321,9 +353,12 @@ public class BotRequest {
 	 * @return a inline keyboard message containing the two options
 	 */
 	private EditMessageText getCoinValueOptions(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
+		LOG.trace("entered getCoinValueOptions()");
+		
 		// check if the call is complete
 		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
 			EditMessageText message = this.generateErrorMessage("Commando niet compleet");
+			LOG.warn("Not all required keys are found for getCoinValueOptions()");
 			return message;
 		}
 		
@@ -357,6 +392,8 @@ public class BotRequest {
 		markupInline.setKeyboard(rowsInline);
 		message.setReplyMarkup(markupInline);
 		
+		LOG.trace("finished getCoinValueOptions()");
+		
 		return message;
 	}
 	
@@ -366,6 +403,8 @@ public class BotRequest {
 	 * @return status message containing the found coins and the 'all' buttons
 	 */
 	private EditMessageText getPortfolioCoins() {
+		LOG.trace("entered getPortfolioCoins()");
+		
 		String messageText = "Op het moment heb ik de volgende coins in het porfolio gevonden:";
 		
 		EditMessageText message = new EditMessageText()
@@ -377,6 +416,8 @@ public class BotRequest {
 		Portfolio portfolio = new Portfolio();
 		portfolio.setCoins();
 		List<String> coins = portfolio.getCoins();
+		
+		LOG.info("found the following coins: {}", coins);
 		
 		// loop through the coins to generate the menu
 		InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
@@ -404,6 +445,8 @@ public class BotRequest {
 		markupInline.setKeyboard(rowsInline);
 		message.setReplyMarkup(markupInline);
 		
+		LOG.trace("finished getPortfolioCoins()");
+		
 		return message;
 	}
 	
@@ -412,6 +455,8 @@ public class BotRequest {
 	 * @return the help text
 	 */
 	private String generateHelpText() {
+		LOG.trace("entered generateHelpText()");
+		
 		String messageText = "Op dit moment kun je de volgende commando's uitvoeren:\n";
 		messageText += "- *bot* => open het menu\n";
 		//messageText += "- /registerCoin <afkorting> <coin naam> => Registreren van een nieuwe coin\n";
@@ -419,6 +464,7 @@ public class BotRequest {
 		messageText += "- /help => verkrijg deze helptekst";
 		//messageText += "- /registerDeposit <wallet adres> <aantal coins> <> => Registreren van nieuwe wallet";
 		
+		LOG.trace("finished generateHelpText()");
 		
 		return messageText;
 	}
@@ -428,10 +474,14 @@ public class BotRequest {
 	 * @return message containing the help text
 	 */
 	private SendMessage getHelpTextSend() {
+		LOG.trace("entered getHelpTextSend()");
+		
 		String messageText = this.generateHelpText();
 		
 		SendMessage message = new SendMessage() // Create a message object object
 				.setChatId(chatID).setText(messageText);
+		
+		LOG.trace("finished getHelpTextSend()");
 		
 		return message;
 	}
@@ -441,12 +491,16 @@ public class BotRequest {
 	 * @return
 	 */
 	private EditMessageText getHelpTextEdit() {
+		LOG.trace("entered getHelpTextEdit()");
+		
 		String messageText = this.generateHelpText();
 		
 		EditMessageText message = new EditMessageText()
                 .setChatId(this.chatID)
                 .setMessageId(toIntExact(this.messageID))
                 .setText(messageText);
+		
+		LOG.trace("finished getHelpTextEdit()");
 		
 		return message;
 		
@@ -458,10 +512,14 @@ public class BotRequest {
 	 * @return the error message
 	 */
 	private EditMessageText generateErrorMessage(String messageText) {
+		LOG.trace("entered generateErrorMessage()");
+		
 		EditMessageText message = new EditMessageText()
                 .setChatId(this.chatID)
                 .setMessageId(toIntExact(this.messageID))
                 .setText(messageText);
+		
+		LOG.trace("entered finished()");
 		
 		return message;
 		

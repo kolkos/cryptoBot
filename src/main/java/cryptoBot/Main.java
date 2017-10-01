@@ -25,15 +25,16 @@ public class Main {
             e.printStackTrace();
         }
         
-        ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-        ses.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                CryptoBot sendBot = new CryptoBot();
-                sendBot.automaticStatusUpdatePortfolio();
-            }
-        }, 0, 1, TimeUnit.HOURS);
         
+//        ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
+//        ses.scheduleAtFixedRate(new Runnable() {
+//            @Override
+//            public void run() {
+//                CryptoBot sendBot = new CryptoBot();
+//                sendBot.automaticStatusUpdatePortfolio();
+//            }
+//        }, 0, 1, TimeUnit.HOURS);
+//        
     }
 	
 }

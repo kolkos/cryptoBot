@@ -17,5 +17,7 @@ public class TestGeneral {
 		assertEquals("Waarschijnlijk heb je de testbot token gebruikt!", "429491716:AAHJIRsPvRkRzpYRIdznxZEXgIJtYZm77M0", prop.getProperty("bot_token"));
 		
 	}
+	
+	
 
 }
