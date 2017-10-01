@@ -3,12 +3,16 @@ package cryptoBot;
 import java.sql.ResultSet;
 import java.util.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Portfolio {
 	private List<String> coins;
 	private List<HashMap<String, String>> wallets;
 	
 	private double totalValuePortfolio;
 	
+	private static final Logger LOG = LogManager.getLogger(Portfolio.class);
 	
 	public List<String> getCoins() {
 		return this.coins;
@@ -26,7 +30,12 @@ public class Portfolio {
 		this.receiveWalletsInPortfolio();
 	}
 
+	/**
+	 * Getting the coins registered in the portfolio. This method will get all used coins with a wallet attached.
+	 */
 	private void receiveCoinsInPortfolio() {
+		LOG.trace("Entering receiveCoinsInPortfolio()");
+		
 		String query = "SELECT" + 
 				" coins.name as coinName" + 
 				" FROM coins, wallets" + 
@@ -44,18 +53,22 @@ public class Portfolio {
 				coins.add(resultSet.getString("coinName"));
 			}
 			
-			db.close();
-			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			LOG.fatal("Error receiving coins from database: {}", e);
 		}finally {
 			db.close();
 		}
-		
+		LOG.trace("Finished receiveCoinsInPortfolio()");
 	}
 	
+	/**
+	 * This method is used to receive the wallets in the portfolio. Only wallets with an coin will be return
+	 */
 	private void receiveWalletsInPortfolio() {
+		LOG.trace("Entering receiveWalletsInPortfolio()");
+		
 		String query = "SELECT wallets.address as walletAddress, coins.name as coinName FROM wallets, coins WHERE wallets.coin_id = coins.id";
 		Object[] parameters = new Object[] {};
 		
@@ -83,9 +96,11 @@ public class Portfolio {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			LOG.fatal("Error receiving wallets from database: {}", e);
 		}finally {
 			db.close();
 		}
+		LOG.trace("Finished receiveWalletsInPortfolio()");
 	}
 	
 	

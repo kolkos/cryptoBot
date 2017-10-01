@@ -13,6 +13,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class MySQLAccess {
 	private Connection connect = null;
 	private Statement statement = null;
@@ -20,12 +23,16 @@ public class MySQLAccess {
 	private ResultSet resultSet = null;
 	private List<HashMap<String, String>> results;
 	
+	private static final Logger LOG = LogManager.getLogger(MySQLAccess.class);
+	
 	/**
 	 * Connect to the database
 	 * @throws SQLException
 	 * @throws ClassNotFoundException
 	 */
 	public void connectDatabase() throws SQLException, ClassNotFoundException {
+		LOG.trace("Entering connectDatabase()");
+		
 		Class.forName("com.mysql.jdbc.Driver");
 		
 		String user = "cryptoBot";
@@ -34,7 +41,10 @@ public class MySQLAccess {
 		
 		String url = "jdbc:mysql://localhost/" + db + "?user=" + user + "&password=" + pass;
 		
+		LOG.trace("mysql url: {}", url);
+		
 		connect = DriverManager.getConnection(url);
+		LOG.trace("Finished connectDatabase()");
 	}
 	
 	/**
@@ -44,24 +54,31 @@ public class MySQLAccess {
 	 * @throws Exception
 	 */
 	public void executeSelectQuery(String query, Object[] parameters) throws Exception {
+		LOG.trace("Entering executeSelectQuery()");
+		
 		// String query, String[] parameters
 		this.connectDatabase();
 		
 		try {
+			LOG.info("Executing prepared statement: {}", query);
+			LOG.info("Prepared parameters: {}", parameters);
+			
 			preparedStatement = connect.prepareStatement(query);
 			
 			int i = 1;
 			for(Object x : parameters) {
 				//System.out.println(x.toString());
 				//preparedStatement.setString(i, x.toString());
+				LOG.trace("Setting parameter {} => {}", i, x);
 				preparedStatement.setObject(i, x);
 				i++;
 			}
 			
 			resultSet = preparedStatement.executeQuery();
 		} catch (Exception e) {
-        		throw e;
+			throw e;
         }
+		LOG.trace("Finished executeSelectQuery()");
 	}
 	
 	/**
@@ -71,15 +88,21 @@ public class MySQLAccess {
 	 * @throws Exception
 	 */
 	public void executeUpdateQuery(String query, Object[] parameters) throws Exception {
+		LOG.trace("Entering executeUpdateQuery()");
+		
 		//connect
 		this.connectDatabase();
 		
 		try {
+			LOG.info("Executing prepared statement: {}", query);
+			LOG.info("Prepared parameters: {}", parameters);
+			
 			preparedStatement = connect.prepareStatement(query);
 			
 			int i = 1;
 			for(Object x : parameters) {
 				//System.out.println(x.toString());
+				LOG.trace("Setting parameter {} => {}", i, x);
 				preparedStatement.setString(i, x.toString());
 				i++;
 			}
@@ -89,7 +112,7 @@ public class MySQLAccess {
 		} catch (Exception e) {
         		throw e;
         }
-		
+		LOG.trace("Finished executeUpdateQuery()");
 	}
 	
 	/**
@@ -103,23 +126,29 @@ public class MySQLAccess {
 	/**
 	 * Close the current call
 	 */
-    public void close() {
-        try {
-            if (resultSet != null) {
-                resultSet.close();
-            }
+	public void close() {
+		LOG.trace("Entering close()");
+		try {
+			if (resultSet != null) {
+				LOG.info("Closing resultSet");
+				resultSet.close();
+			}
 
-            if (statement != null) {
-                statement.close();
-            }
+			if (statement != null) {
+				LOG.info("Closing statement");
+				statement.close();
+			}
 
-            if (connect != null) {
-                connect.close();
-            }
-        } catch (Exception e) {
-        		e.printStackTrace();
-        }
-    }
+			if (connect != null) {
+				LOG.info("Closing connection");
+				connect.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			LOG.fatal("Error closing: {}", e);
+		}
+		LOG.trace("Entering close()");
+	}
 	
 	
 	

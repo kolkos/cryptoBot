@@ -38,7 +38,7 @@ public class Main {
                 CryptoBot sendBot = new CryptoBot();
                 sendBot.automaticStatusUpdatePortfolio();
             }
-        }, 0, 1, TimeUnit.MINUTES);
+        }, 0, 1, TimeUnit.HOURS);
         LOG.info("Finished starting the bot");
     }
 	
