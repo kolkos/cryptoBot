@@ -2,9 +2,10 @@
 #############
 *.log
 
-# properties file #
-###################
-*.properties
+# properties file                         #
+# just the config properties file for now #
+###########################################
+config.properties
 
 # build folder #
 ################

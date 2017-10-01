@@ -3,6 +3,9 @@ package cryptoBot;
 import java.sql.ResultSet;
 import java.util.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Coin {
 	private String coinName;
 	private int totalBalanceSatoshi = 0;
@@ -12,6 +15,7 @@ public class Coin {
 	private String currency = "eur";
 	private int requestID;
 	
+	private static final Logger LOG = LogManager.getLogger(Coin.class);
 	
 	public int getRequestID() {
 		return requestID;
@@ -57,6 +61,8 @@ public class Coin {
 	 * Method to get the wallet addresses from the database
 	 */
 	private void receiveWalletAddresses() {
+		LOG.trace("entered receiveWalletAddresses()");
+		
 		String query = "SELECT wallets.address AS walletAddress " + 
 				"FROM wallets, coins " + 
 				"WHERE wallets.coin_id = coins.id " + 
@@ -71,24 +77,34 @@ public class Coin {
 			
 			this.walletAddresses = new ArrayList<>();
 			while (resultSet.next()) {
+				LOG.info("found wallet: {}", resultSet.getString("walletAddress"));
 				this.walletAddresses.add(resultSet.getString("walletAddress"));
 			}
 			
-			db.close();
+			
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			db.close();
 		}
+		LOG.trace("finished receiveWalletAddresses()");
+		
+		
 	}
 	
 	/**
 	 * This method calculates the value from the found wallets
 	 */
 	public void calculateCurrentTotalValuesForCoin() {
+		LOG.trace("entered calculateCurrentTotalValuesForCoin()");
+		
 		// loop through the addresses
 		
 		for(String walletAddress : this.walletAddresses) {
+			LOG.info("getting current value for wallet {}", walletAddress);
+			
 			//System.out.println(walletAddress);
 			
 			
@@ -108,6 +124,8 @@ public class Coin {
 			this.totalCurrentValue += wallet.getCurrentValue();
 			
 		}
+		
+		LOG.trace("finished calculateCurrentTotalValuesForCoin()");
 	}
 	
 	/**
@@ -116,7 +134,10 @@ public class Coin {
 	 * @param sinceBegin depending on this value it will get the last or the first value
 	 */
 	public void calculatePreviousTotalValuesForCoin(boolean sinceBegin) {
+		LOG.trace("entered calculatePreviousTotalValuesForCoin(): sinceBegin={}", sinceBegin);
+		
 		for(String walletAddress : this.walletAddresses) {
+			LOG.info("getting previous value for wallet {}", walletAddress);
 			//System.out.println(walletAddress);
 			
 			// first set the necessary values
@@ -140,6 +161,7 @@ public class Coin {
 			this.totalCurrentValue += wallet.getCurrentValue();
 			
 		}
+		LOG.trace("finished calculatePreviousTotalValuesForCoin()");
 	}
 	
 }

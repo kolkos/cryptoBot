@@ -180,6 +180,7 @@ public class BotRequest {
 	 */
 	private HashMap<String, String> parseCallData(){
 		LOG.trace("entered parseCallData()");
+		LOG.trace("callData={}", this.command);
 		HashMap<String, String> parameters = new HashMap<>();
 		String[] keyValuePairs = this.command.split(",");
 		for(String keyValuePair : keyValuePairs) {
@@ -201,7 +202,7 @@ public class BotRequest {
 	 * @return
 	 */
 	private boolean checkCallDataComplete(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
-		LOG.trace("entered checkCallDataComplete()");
+		LOG.trace("entered checkCallDataComplete(): requiredKeys={}, callDataDetails={}", requiredKeys, callDataDetails);
 		
 		// by default the check is OK
 		boolean checkOK = true;

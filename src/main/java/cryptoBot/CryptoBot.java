@@ -1,5 +1,7 @@
 package cryptoBot;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.api.objects.Update;
@@ -34,6 +36,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 	private final static int FROM_HOUR = 12;
 	private final static int TO_HOUR = 13;
 	
+	private static final Logger LOG = LogManager.getLogger(CryptoBot.class);
+	
 	public CryptoBot() {
 		General general = new General();
 		this.properties = general.getProperties();
@@ -45,9 +49,11 @@ public class CryptoBot extends TelegramLongPollingBot {
 	 */
 	@Override
 	public void onUpdateReceived(Update update) {
+		LOG.trace("entered onUpdateReceived()");
+		
 		// handle incoming chat messages
 		if (update.hasMessage() && update.getMessage().hasText()) {
-			
+			LOG.info("received incoming message");
 			
 			String incomingMessageText = update.getMessage().getText();
 			long chatID = update.getMessage().getChatId();
@@ -58,11 +64,13 @@ public class CryptoBot extends TelegramLongPollingBot {
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
+				LOG.fatal("error registering the chatID {}", e1);
 			}
 			
 			// check if the chat is allowed to send requests
 			if(! this.checkIfChatIsAllowedToSendRequests(chatID)) {
 				// now allowed, exit method
+				LOG.info("Chat isn't authorized (yet).");
 				return;
 			}
 			
@@ -76,7 +84,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 			Matcher matcher = patternBot.matcher(incomingMessageText);
 			// only do something when the word 'bot' is found
 			if (matcher.find()) {
-				
+				LOG.info("Incoming chat message matches {}.", patternBot);
+								
 				// get the other details
 				String firstName = update.getMessage().getFrom().getFirstName();
 				
@@ -87,17 +96,20 @@ public class CryptoBot extends TelegramLongPollingBot {
 
 				SendMessage message = chatRequest.getBotOptions();
 				
-				
+				LOG.info("message to send: {}.", message);
 				
 				try {
 					sendMessage(message); // Sending our message object to user
 				} catch (TelegramApiException e) {
-					e.printStackTrace();
+					//e.printStackTrace();
+					LOG.fatal("error sending chat message {}", e);
 				}
 
 			}
 		// handle incoming callback queries
 		} else if (update.hasCallbackQuery()) {
+			LOG.info("received incoming callback query");
+			
 			// call data is the command which is set to a inline keyboard button
 			String callData = update.getCallbackQuery().getData();
 			
@@ -121,9 +133,11 @@ public class CryptoBot extends TelegramLongPollingBot {
 				editMessageText(message);
 			} catch (TelegramApiException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				//e.printStackTrace();
+				LOG.fatal("error editing chat message {}", e);
 			}
 		}
+		LOG.trace("finished onUpdateReceived()");
 	}
 	
 	/**
@@ -135,6 +149,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 	 * @throws Exception mysql error
 	 */
 	public void registerChat(long chatID) throws Exception {
+		LOG.trace("entered registerChat(), chatID={}", chatID);
+		
 		// check if the chat is already registered
 		String query = "SELECT chat_id FROM chats WHERE chat_id = ?";
 		Object[] parameters = new Object[] {chatID};
@@ -144,6 +160,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 		ResultSet resultSet = db.getResultSet();
 		
 		if(resultSet.next() == false){
+			LOG.info("chatID {} is not registered yet", chatID);
+			
 			// the chat is not registered, register it
 			query = "INSERT INTO chats (chat_id) VALUES (?)";
 			parameters = new Object[] {chatID};
@@ -152,6 +170,7 @@ public class CryptoBot extends TelegramLongPollingBot {
 		}
 		
 		db.close();
+		LOG.trace("finished registerChat()");
 	}
 	
 	/**
@@ -161,6 +180,7 @@ public class CryptoBot extends TelegramLongPollingBot {
 	 * @return true if the chat is allowed, else false
 	 */
 	private boolean checkIfChatIsAllowedToSendRequests(long chatID) {
+		LOG.trace("entered checkIfChatIsAllowedToSendRequests(), chatID={}", chatID);
 		// now check if the chat is in the database and if it is allowed to place requests for this bot
 		String query = "SELECT * FROM chats WHERE chat_id = ? AND active = 1";
 		Object[] parameters = new Object[] {chatID};
@@ -179,8 +199,9 @@ public class CryptoBot extends TelegramLongPollingBot {
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			// error found, for safety reasons return false
-			e1.printStackTrace();
+			//e1.printStackTrace();
 			db.close();
+			LOG.fatal("Error getting chats from database: {}", e1);
 			return false;
 		}finally {
 			db.close();
@@ -196,6 +217,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 	 * to the registered chats. The method checks if active and receive_update are set to 1
 	 */
 	public void automaticStatusUpdatePortfolio() {
+		LOG.trace("entered automaticStatusUpdatePortfolio()");
+		
 		Request request = new Request();
 		request.setRequestedCoins("all");
 		request.setRequestedBy("cryptoBot");
@@ -206,7 +229,7 @@ public class CryptoBot extends TelegramLongPollingBot {
 		cal.setTime(new Date());
 		int hour = cal.get(Calendar.HOUR_OF_DAY);  //Get the hour from the calendar
 		
-		System.out.println("Run automatic task automaticStatusUpdatePortfolio() @ " + cal.getTime());
+		LOG.info("Run automatic task automaticStatusUpdatePortfolio() @ {}", cal.getTime());
 		
 		// Check if hour is between 12 and 13
 		// if so send the message
@@ -226,22 +249,26 @@ public class CryptoBot extends TelegramLongPollingBot {
 				
 				while (resultSet.next()) {
 					long chatID = resultSet.getLong("chat_id");
+					LOG.info("Sending a automatic generated message to {}", chatID);
 					
 					SendMessage message = new SendMessage() // Create a message object object
 							.setChatId(chatID).setText(request.getStatusMessage());
 					try {
 						sendMessage(message); // Sending our message object to user
 					} catch (TelegramApiException e) {
-						System.out.println("Niet toegevoegd aan chat: " + chatID);
+						//System.out.println("Bot niet toegevoegd aan chat: " + chatID);
+						LOG.warn("Error sending message to (probably not in group) {}", e);
 					}
 				}
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				//e1.printStackTrace();
+				LOG.fatal("Error getting details from database: {}", e1);
 			}finally {
 				db.close();
 			}
 		}
+		LOG.trace("finished automaticStatusUpdatePortfolio()");
 	}
 	
 	/**
@@ -250,14 +277,18 @@ public class CryptoBot extends TelegramLongPollingBot {
 	 * @param messageText the message to send
 	 */
 	public void sendMessageToChat(long chatID, String messageText) {
+		LOG.trace("entered sendMessageToChat(), chatID={}, messageText={}", chatID, messageText);
+		
 		SendMessage message = new SendMessage() // Create a message object object
 				.setChatId(chatID).setText(messageText);
 		try {
 			sendMessage(message); // Sending our message object to user
 		} catch (TelegramApiException e) {
 			// TODO: iets met fout doen
-			e.printStackTrace();
+			//e.printStackTrace();
+			LOG.fatal("Error sending message: {}", e);
 		}
+		LOG.trace("finished sendMessageToChat()");
 	}
 	
 	
