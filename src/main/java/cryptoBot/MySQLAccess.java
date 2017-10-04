@@ -60,8 +60,8 @@ public class MySQLAccess {
 		this.connectDatabase();
 		
 		try {
-			LOG.info("Executing prepared statement: {}", query);
-			LOG.info("Prepared parameters: {}", parameters);
+			LOG.trace("Executing prepared statement: {}", query);
+			LOG.trace("Prepared parameters: {}", parameters);
 			
 			preparedStatement = connect.prepareStatement(query);
 			
@@ -75,6 +75,8 @@ public class MySQLAccess {
 			}
 			
 			resultSet = preparedStatement.executeQuery();
+			
+			LOG.info("Query ({}) Executed OK", query);
 		} catch (Exception e) {
 			throw e;
         }
@@ -94,8 +96,8 @@ public class MySQLAccess {
 		this.connectDatabase();
 		
 		try {
-			LOG.info("Executing prepared statement: {}", query);
-			LOG.info("Prepared parameters: {}", parameters);
+			LOG.trace("Executing prepared statement: {}", query);
+			LOG.trace("Prepared parameters: {}", parameters);
 			
 			preparedStatement = connect.prepareStatement(query);
 			
@@ -109,6 +111,7 @@ public class MySQLAccess {
 			
 			// just execute
 			preparedStatement.executeUpdate();
+			LOG.info("Query ({}) Executed OK", query);
 		} catch (Exception e) {
         		throw e;
         }
@@ -130,17 +133,17 @@ public class MySQLAccess {
 		LOG.trace("Entering close()");
 		try {
 			if (resultSet != null) {
-				LOG.info("Closing resultSet");
+				LOG.trace("Closing resultSet");
 				resultSet.close();
 			}
 
 			if (statement != null) {
-				LOG.info("Closing statement");
+				LOG.trace("Closing statement");
 				statement.close();
 			}
 
 			if (connect != null) {
-				LOG.info("Closing connection");
+				LOG.trace("Closing connection");
 				connect.close();
 			}
 		} catch (Exception e) {

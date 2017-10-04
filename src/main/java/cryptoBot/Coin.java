@@ -103,7 +103,7 @@ public class Coin {
 		// loop through the addresses
 		
 		for(String walletAddress : this.walletAddresses) {
-			LOG.info("getting current value for wallet {}", walletAddress);
+			LOG.trace("getting current value for wallet {}", walletAddress);
 			
 			//System.out.println(walletAddress);
 			
@@ -137,7 +137,7 @@ public class Coin {
 		LOG.trace("entered calculatePreviousTotalValuesForCoin(): sinceBegin={}", sinceBegin);
 		
 		for(String walletAddress : this.walletAddresses) {
-			LOG.info("getting previous value for wallet {}", walletAddress);
+			LOG.trace("getting previous value for wallet {}", walletAddress);
 			//System.out.println(walletAddress);
 			
 			// first set the necessary values

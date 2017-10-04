@@ -18,5 +18,8 @@ Changes:
       in the database;
   - Added the /version command (show this text);
   - Added a shortcut to request the portfolio since the last request
+  - Added logging
+Fixes:
+  - Edited regex to only trigger on the word bor (not as part of a word)
     
 ------------

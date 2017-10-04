@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -80,7 +81,7 @@ public class CryptoBot extends TelegramLongPollingBot {
 			//System.out.println(incomingMessageText);
 			
 			// first check if the bot contains the word 'bot'
-			Pattern patternBot = Pattern.compile(".*bot.*");
+			Pattern patternBot = Pattern.compile("^(.*?)(\\bbot\\b)(.*)$");
 			Matcher matcher = patternBot.matcher(incomingMessageText);
 			// only do something when the word 'bot' is found
 			if (matcher.find()) {
@@ -139,6 +140,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 		}
 		LOG.trace("finished onUpdateReceived()");
 	}
+	
+
 	
 	/**
 	 * Register the incoming chat message. This method checks if the chatID is already registerd.
@@ -256,7 +259,7 @@ public class CryptoBot extends TelegramLongPollingBot {
 					try {
 						sendMessage(message); // Sending our message object to user
 					} catch (TelegramApiException e) {
-						//System.out.println("Bot niet toegevoegd aan chat: " + chatID);
+						//System.out.println("Bot 3niet toegevoegd aan chat: " + chatID);
 						LOG.warn("Error sending message to (probably not in group) {}", e);
 					}
 				}
