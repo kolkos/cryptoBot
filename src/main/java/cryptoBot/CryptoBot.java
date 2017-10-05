@@ -59,8 +59,6 @@ public class CryptoBot extends TelegramLongPollingBot {
 			String incomingMessageText = update.getMessage().getText();
 			long chatID = update.getMessage().getChatId();
 
-			System.out.println(chatID);
-			
 			// first register this chat (if necessary)
 			try {
 				this.registerChat(chatID);
@@ -82,16 +80,18 @@ public class CryptoBot extends TelegramLongPollingBot {
 			incomingMessageText = incomingMessageText.toLowerCase();
 			//System.out.println(incomingMessageText);
 			
+			String firstName = update.getMessage().getFrom().getFirstName();
+			
+			LOG.trace("Incoming chat message {}.", incomingMessageText);
+			
 			// first check if the bot contains the word 'bot'
 			Pattern patternBot = Pattern.compile("^(.*?)(\\bbot\\b)(.*)$");
 			Matcher matcher = patternBot.matcher(incomingMessageText);
 			// only do something when the word 'bot' is found
 			if (matcher.find()) {
 				LOG.trace("Incoming chat message matches {}.", patternBot);
-								
-				// get the other details
-				String firstName = update.getMessage().getFrom().getFirstName();
-				
+												
+				// rename the command
 				String command = "getBotOptions";
 				
 				BotRequest chatRequest = new BotRequest();
@@ -111,6 +111,19 @@ public class CryptoBot extends TelegramLongPollingBot {
 			}
 			
 			// handle other commands
+			// these commands start with /
+			patternBot = Pattern.compile("^/.*$");
+			matcher = patternBot.matcher(incomingMessageText);
+			if (matcher.find()) {
+				LOG.trace("Incoming chat message matches {}.", patternBot);
+				
+				// now let the BotRequest class deal with it
+				BotRequest chatRequest = new BotRequest();
+				chatRequest.registerChatMessage(chatID, firstName, incomingMessageText);
+				
+				
+			}
+			
 		// handle incoming callback queries
 		} else if (update.hasCallbackQuery()) {
 			LOG.info("received incoming callback query");
