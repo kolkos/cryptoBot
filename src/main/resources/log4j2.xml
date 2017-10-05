@@ -12,9 +12,9 @@
 	</Appenders>
 
 	<Loggers>
-		<Logger name="nl.kolkos.cryptobot" level="info" />
+		<Logger name="nl.kolkos.cryptobot" level="trace" />
 
-		<Root level="info">
+		<Root level="trace">
 			<AppenderRef ref="STDOUT" />
 			<AppenderRef ref="FILE" />
 		</Root>

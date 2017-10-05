@@ -59,6 +59,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 			String incomingMessageText = update.getMessage().getText();
 			long chatID = update.getMessage().getChatId();
 
+			System.out.println(chatID);
+			
 			// first register this chat (if necessary)
 			try {
 				this.registerChat(chatID);
@@ -85,7 +87,7 @@ public class CryptoBot extends TelegramLongPollingBot {
 			Matcher matcher = patternBot.matcher(incomingMessageText);
 			// only do something when the word 'bot' is found
 			if (matcher.find()) {
-				LOG.info("Incoming chat message matches {}.", patternBot);
+				LOG.trace("Incoming chat message matches {}.", patternBot);
 								
 				// get the other details
 				String firstName = update.getMessage().getFrom().getFirstName();
@@ -97,7 +99,7 @@ public class CryptoBot extends TelegramLongPollingBot {
 
 				SendMessage message = chatRequest.getBotOptions();
 				
-				LOG.info("message to send: {}.", message);
+				LOG.trace("message to send: {}.", message);
 				
 				try {
 					sendMessage(message); // Sending our message object to user
@@ -107,6 +109,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 				}
 
 			}
+			
+			// handle other commands
 		// handle incoming callback queries
 		} else if (update.hasCallbackQuery()) {
 			LOG.info("received incoming callback query");
@@ -196,7 +200,7 @@ public class CryptoBot extends TelegramLongPollingBot {
 			if(! resultSet.next()) {
 				// no results found, this means that the bot isn't allowed to send to this group
 				String messageText = String.format("Hoi! Wij kennen elkaar nog niet. Vraag even aan Anton (@Kolkos) of hij deze chat wil activeren. Vermeld dit chatID: %d", chatID);
-				this.sendMessageToChat(chatID, messageText);
+				this.sendStringToChat(chatID, messageText);
 				return false;
 			}
 		} catch (Exception e1) {
@@ -279,8 +283,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 	 * @param chatID the id of the chat where to send the message to
 	 * @param messageText the message to send
 	 */
-	public void sendMessageToChat(long chatID, String messageText) {
-		LOG.trace("entered sendMessageToChat(), chatID={}, messageText={}", chatID, messageText);
+	public void sendStringToChat(long chatID, String messageText) {
+		LOG.trace("entered sendStringToChat(), chatID={}, messageText={}", chatID, messageText);
 		
 		SendMessage message = new SendMessage() // Create a message object object
 				.setChatId(chatID).setText(messageText);
@@ -291,7 +295,20 @@ public class CryptoBot extends TelegramLongPollingBot {
 			//e.printStackTrace();
 			LOG.fatal("Error sending message: {}", e);
 		}
-		LOG.trace("finished sendMessageToChat()");
+		LOG.trace("finished sendStringToChat()");
+	}
+	
+	public void sendPreparedMessageToChat(long chatID, SendMessage message) {
+		LOG.trace("entered sendPreparedMessageToChat(), chatID={}, messageText={}", chatID, message);
+
+		try {
+			sendMessage(message); // Sending our message object to user
+		} catch (TelegramApiException e) {
+			// TODO: iets met fout doen
+			//e.printStackTrace();
+			LOG.fatal("Error sending message: {}", e);
+		}
+		LOG.trace("finished sendPreparedMessageToChat()");
 	}
 	
 	
