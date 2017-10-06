@@ -291,38 +291,38 @@ public class CryptoBot extends TelegramLongPollingBot {
 		LOG.trace("finished automaticStatusUpdatePortfolio()");
 	}
 	
-	/**
-	 * Super simple method to send a chat message to an ID. 
-	 * @param chatID the id of the chat where to send the message to
-	 * @param messageText the message to send
-	 */
-	public void sendStringToChat(long chatID, String messageText) {
-		LOG.trace("entered sendStringToChat(), chatID={}, messageText={}", chatID, messageText);
-		
-		SendMessage message = new SendMessage() // Create a message object object
-				.setChatId(chatID).setText(messageText);
-		try {
-			sendMessage(message); // Sending our message object to user
-		} catch (TelegramApiException e) {
-			// TODO: iets met fout doen
-			//e.printStackTrace();
-			LOG.fatal("Error sending message: {}", e);
-		}
-		LOG.trace("finished sendStringToChat()");
-	}
-	
-	public void sendPreparedMessageToChat(long chatID, SendMessage message) {
-		LOG.trace("entered sendPreparedMessageToChat(), chatID={}, messageText={}", chatID, message);
-
-		try {
-			sendMessage(message); // Sending our message object to user
-		} catch (TelegramApiException e) {
-			// TODO: iets met fout doen
-			//e.printStackTrace();
-			LOG.fatal("Error sending message: {}", e);
-		}
-		LOG.trace("finished sendPreparedMessageToChat()");
-	}
+//	/**
+//	 * Super simple method to send a chat message to an ID. 
+//	 * @param chatID the id of the chat where to send the message to
+//	 * @param messageText the message to send
+//	 */
+//	public void sendStringToChat(long chatID, String messageText) {
+//		LOG.trace("entered sendStringToChat(), chatID={}, messageText={}", chatID, messageText);
+//		
+//		SendMessage message = new SendMessage() // Create a message object object
+//				.setChatId(chatID).setText(messageText);
+//		try {
+//			sendMessage(message); // Sending our message object to user
+//		} catch (TelegramApiException e) {
+//			// TODO: iets met fout doen
+//			//e.printStackTrace();
+//			LOG.fatal("Error sending message: {}", e);
+//		}
+//		LOG.trace("finished sendStringToChat()");
+//	}
+//	
+//	public void sendPreparedMessageToChat(long chatID, SendMessage message) {
+//		LOG.trace("entered sendPreparedMessageToChat(), chatID={}, messageText={}", chatID, message);
+//
+//		try {
+//			sendMessage(message); // Sending our message object to user
+//		} catch (TelegramApiException e) {
+//			// TODO: iets met fout doen
+//			//e.printStackTrace();
+//			LOG.fatal("Error sending message: {}", e);
+//		}
+//		LOG.trace("finished sendPreparedMessageToChat()");
+//	}
 	
 	
 	@Override
