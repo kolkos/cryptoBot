@@ -7,27 +7,26 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class Portfolio {
-	private List<String> coins;
-	private List<HashMap<String, String>> wallets;
-	
-	private double totalValuePortfolio;
+	private List<String> coinList;
+	private List<Coin> coins;
+	private double totalValuePortfolio = 0;
 	
 	private static final Logger LOG = LogManager.getLogger(Portfolio.class);
 	
-	public List<String> getCoins() {
+	public List<Coin> getCoins() {
 		return this.coins;
 	}
 
-	public List<HashMap<String, String>> getWallets(){
-		return this.wallets;
+	public List<String> getCoinList() {
+		return this.coinList;
 	}
-
-	public void setCoins() {
+	
+	public void setCoinList() {
 		this.receiveCoinsInPortfolio();
 	}
-
-	public void setWallets() {
-		this.receiveWalletsInPortfolio();
+	
+	public double getTotalValuePortfolio() {
+		return this.totalValuePortfolio;
 	}
 
 	/**
@@ -39,7 +38,8 @@ public class Portfolio {
 		String query = "SELECT" + 
 				" coins.name as coinName" + 
 				" FROM coins, wallets" + 
-				" WHERE wallets.coin_id = coins.id";
+				" WHERE wallets.coin_id = coins.id "
+				+ "AND coins.name != 'tst'";
 		Object[] parameters = new Object[] {};
 		
 		MySQLAccess db = new MySQLAccess();
@@ -48,9 +48,9 @@ public class Portfolio {
 			
 			ResultSet resultSet = db.getResultSet();
 			
-			coins = new ArrayList<>();
+			coinList = new ArrayList<>();
 			while (resultSet.next()) {
-				coins.add(resultSet.getString("coinName"));
+				coinList.add(resultSet.getString("coinName"));
 			}
 			
 		} catch (Exception e) {
@@ -64,45 +64,47 @@ public class Portfolio {
 	}
 	
 	/**
-	 * This method is used to receive the wallets in the portfolio. Only wallets with an coin will be return
+	 * This method gets a single coin from the portfolio
+	 * @param coinName the name of the coin
 	 */
-	private void receiveWalletsInPortfolio() {
-		LOG.trace("Entering receiveWalletsInPortfolio()");
+	public void getCoinInPortfolio(String coinName) {
+		LOG.trace("Entering getCoinInPortfolio(), coinName={}", coinName);
 		
-		String query = "SELECT wallets.address as walletAddress, coins.name as coinName FROM wallets, coins WHERE wallets.coin_id = coins.id";
-		Object[] parameters = new Object[] {};
+		this.coins = new ArrayList<>();
+		Coin coin = new Coin();
+		coin.getWalletsForCoin(coinName);
 		
-		MySQLAccess db = new MySQLAccess();
+		// add the total coin value to the portfolio value
+		this.totalValuePortfolio += coin.getTotalCoinValue();
 		
-		this.wallets = new ArrayList<>();
+		// add to the list
+		this.coins.add(coin);
 		
-		try {
-			db.executeSelectQuery(query, parameters);
-			
-			ResultSet resultSet = db.getResultSet();
-			
-			while (resultSet.next()) {
-				HashMap<String, String> values = new HashMap<>();
-				
-				values.put("coinName", resultSet.getString("coinName"));
-				values.put("walletAddress", resultSet.getString("walletAddress"));
-				
-				this.wallets.add(values);
-				
-			}
-			
-			db.close();
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			LOG.fatal("Error receiving wallets from database: {}", e);
-		}finally {
-			db.close();
-		}
-		LOG.trace("Finished receiveWalletsInPortfolio()");
+		LOG.trace("Finished getCoinInPortfolio()");
 	}
 	
+	/**
+	 * This method gets all the coins in the portfolio
+	 */
+	public void getAllCoinsInPortfolio() {
+		LOG.trace("Entering getAllCoinsInPortfolio()");
+		
+		this.coins = new ArrayList<>();
+		
+		// reuse the receiveCoinsInPortfolio method
+		this.receiveCoinsInPortfolio();
+		for(String coinName : coinList) {
+			Coin coin = new Coin();
+			coin.getWalletsForCoin(coinName);
+			
+			// calculate the total value
+			this.totalValuePortfolio += coin.getTotalCoinValue();
+			
+			// add to the list
+			this.coins.add(coin);
+		}
+		LOG.trace("Finished getAllCoinsInPortfolio()");
+	}
 	
 	
 	

@@ -8,33 +8,29 @@ import org.apache.logging.log4j.Logger;
 
 public class Coin {
 	private String coinName;
-	private int totalBalanceSatoshi = 0;
-	private double totalBalanceCoin = 0;
-	private double totalCurrentValue = 0;
 	private List<String> walletAddresses;
-	private String currency = "eur";
-	private int requestID;
+	private List<Wallet> wallets;
+	private double totalCoinValue = 0;
 	
 	private static final Logger LOG = LogManager.getLogger(Coin.class);
 	
-	public int getRequestID() {
-		return requestID;
+	public List<Wallet> getWallets() {
+		return this.wallets;
+	}
+	
+	public double getTotalCoinValue() {
+		return totalCoinValue;
 	}
 
 	/**
-	 * Register the ID of the incoming request
-	 * @param requestID
+	 * This public method gets the wallet addresses for the selected coin
+	 * @param coinName the name of the coin
+	 * @return the list containing the wallets for the selected coin
 	 */
-	public void setRequestID(int requestID) {
-		this.requestID = requestID;
-	}
-
-	public List<String> getWalletAddresses() {
+	public List<String> getWalletAddresses(String coinName) {
+		this.setCoinName(coinName);
+		this.receiveWalletAddressesForCoin();
 		return this.walletAddresses;
-	}
-
-	public void setWalletAddresses() {
-		this.receiveWalletAddresses();
 	}
 
 	public String getCoinName() {
@@ -45,22 +41,11 @@ public class Coin {
 		this.coinName = coinName;
 	}
 	
-	public int getTotalBalanceSatoshi() {
-		return this.totalBalanceSatoshi;
-	}
-	
-	public double getTotalBalanceCoin() {
-		return this.totalBalanceCoin;
-	}
-	
-	public double getTotalCurrentValue() {
-		return this.totalCurrentValue;
-	}
 	
 	/**
 	 * Method to get the wallet addresses from the database
 	 */
-	private void receiveWalletAddresses() {
+	private void receiveWalletAddressesForCoin() {
 		LOG.trace("entered receiveWalletAddresses()");
 		
 		String query = "SELECT wallets.address AS walletAddress " + 
@@ -79,89 +64,154 @@ public class Coin {
 			while (resultSet.next()) {
 				LOG.info("found wallet: {}", resultSet.getString("walletAddress"));
 				this.walletAddresses.add(resultSet.getString("walletAddress"));
-			}
-			
-			
-			
+			}	
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.fatal("Error receiving wallet addresses, {}", e);
 		} finally {
 			db.close();
 		}
 		LOG.trace("finished receiveWalletAddresses()");
 		
-		
 	}
 	
 	/**
-	 * This method calculates the value from the found wallets
+	 * This method gets the wallet for the selected coin
+	 * @param coinName the name of the coin
 	 */
-	public void calculateCurrentTotalValuesForCoin() {
-		LOG.trace("entered calculateCurrentTotalValuesForCoin()");
+	public void getWalletsForCoin(String coinName) {
+		this.setCoinName(coinName);
+		
+		LOG.trace("entered getWalletsForCoin()");
+		
+		this.wallets = new ArrayList<>();
+		// get the wallets for this coin
+		// reuse the receiveWalletAddresses method
+		this.receiveWalletAddressesForCoin();
 		
 		// loop through the addresses
-		
 		for(String walletAddress : this.walletAddresses) {
-			LOG.trace("getting current value for wallet {}", walletAddress);
-			
-			//System.out.println(walletAddress);
-			
-			
-			// first set the necessary values
 			Wallet wallet = new Wallet();
-			wallet.setCurrency(this.currency);
-			wallet.setCoinName(this.coinName);
-			wallet.setRequestID(this.requestID);
-			wallet.setWalletAddress(walletAddress);
+
+			// now receive the values for this wallet
+			wallet.getWalletValue(this.coinName, walletAddress);
 			
-			// now get the current values from the api
-			wallet.getWalletValue();
+			// add the value of this wallet to the total value
+			this.totalCoinValue += wallet.getCurrentValue();
+						
+			// now add this address to the wallets list
+			this.wallets.add(wallet);
 			
-			// now append the value from the current wallet to the total coin values
-			this.totalBalanceSatoshi += wallet.getBalanceSatoshi();
-			this.totalBalanceCoin += wallet.getBalanceCoin();
-			this.totalCurrentValue += wallet.getCurrentValue();
-			
+			LOG.trace("added wallet {} for coin {}", walletAddress, this.coinName);
 		}
+		LOG.trace("finished getWalletsForCoin()");
 		
-		LOG.trace("finished calculateCurrentTotalValuesForCoin()");
 	}
 	
-	/**
-	 * Get the values from the coins from the database (results table)
-	 * These values are used to compare the current value to
-	 * @param sinceBegin depending on this value it will get the last or the first value
-	 */
-	public void calculatePreviousTotalValuesForCoin(boolean sinceBegin) {
-		LOG.trace("entered calculatePreviousTotalValuesForCoin(): sinceBegin={}", sinceBegin);
-		
-		for(String walletAddress : this.walletAddresses) {
-			LOG.trace("getting previous value for wallet {}", walletAddress);
-			//System.out.println(walletAddress);
-			
-			// first set the necessary values
-			Wallet wallet = new Wallet();
-			wallet.setCurrency(this.currency);
-			wallet.setCoinName(this.coinName);
-			wallet.setWalletAddress(walletAddress);
-			
-			// now determine which method needs to be called
-			// this depends if the user wants to receive the first entry (the beginning) 
-			// or since the last request
-			if(sinceBegin) {
-				wallet.getFirstKnownValues();
-			}else {
-				wallet.getLastKnownValues();
-			}
-			
-			// now calculate the values
-			this.totalBalanceSatoshi += wallet.getBalanceSatoshi();
-			this.totalBalanceCoin += wallet.getBalanceCoin();
-			this.totalCurrentValue += wallet.getCurrentValue();
-			
-		}
-		LOG.trace("finished calculatePreviousTotalValuesForCoin()");
-	}
+//	/**
+//	 * This method gets all the wallets
+//	 */
+//	public void getAllWallets() {
+//		LOG.trace("entered getAllWallets()");
+//		this.wallets = new ArrayList<>();
+//		
+//		String query = "SELECT wallets.address AS walletAddress, coins.name AS coinName " + 
+//				"FROM wallets, coins " + 
+//				"WHERE wallets.coin_id = coins.id " +
+//				"AND coins.name != 'tst'";
+//		Object[] parameters = new Object[] {};
+//		MySQLAccess db = new MySQLAccess();
+//			
+//		
+//		try {
+//			// run the query
+//			db.executeSelectQuery(query, parameters);
+//			
+//			// get the result set
+//			ResultSet resultSet = db.getResultSet();
+//			
+//			// now loop through the results
+//			while (resultSet.next()) {
+//				LOG.info("found wallet {} for coin {}", resultSet.getString("walletAddress"), resultSet.getString("coinName"));
+//				
+//				Wallet wallet = new Wallet();
+//				// now receive the values for this wallet
+//				wallet.getWalletValue(resultSet.getString("coinName"), resultSet.getString("walletAddress"));
+//				
+//				// now add this address to the wallets list
+//				this.wallets.add(wallet);
+//			}
+//			
+//		} catch (Exception e) {
+//			LOG.fatal("Error receiving wallets, {}", e);
+//		}finally {
+//			db.close();
+//		}
+//	}
+	
+	
+//	/**
+//	 * This method calculates the value from the found wallets
+//	 */
+//	public void calculateCurrentTotalValuesForCoin() {
+//		LOG.trace("entered calculateCurrentTotalValuesForCoin()");
+//		
+//		// loop through the addresses
+//		
+//		for(String walletAddress : this.walletAddresses) {
+//			LOG.trace("getting current value for wallet {}", walletAddress);
+//			
+//			//System.out.println(walletAddress);
+//			
+//			
+//			// first set the necessary values
+//			Wallet wallet = new Wallet();
+//			wallet.setCurrency(this.currency);
+//			wallet.setCoinName(this.coinName);
+////			wallet.setRequestID(this.requestID);
+//			wallet.setWalletAddress(walletAddress);
+//			
+//			// now get the current values from the api
+//			wallet.getWalletValue();
+//			
+//			// now append the value from the current wallet to the total coin values
+//			this.totalBalanceSatoshi += wallet.getBalanceSatoshi();
+//			this.totalBalanceCoin += wallet.getBalanceCoin();
+//			this.totalCurrentValue += wallet.getCurrentValue();
+//			
+//		}
+//		
+//		LOG.trace("finished calculateCurrentTotalValuesForCoin()");
+//	}
+//	
+//	/**
+//	 * Get the values from the coins from the database (results table)
+//	 * These values are used to compare the current value to
+//	 * @param sinceBegin depending on this value it will get the last or the first value
+//	 */
+//	public void calculatePreviousTotalValuesForCoin() {
+//		LOG.trace("entered calculatePreviousTotalValuesForCoin()");
+//		
+//		for(String walletAddress : this.walletAddresses) {
+//			LOG.trace("getting previous value for wallet {}", walletAddress);
+//			//System.out.println(walletAddress);
+//			
+//			// first set the necessary values
+//			Wallet wallet = new Wallet();
+//			wallet.setCurrency(this.currency);
+//			wallet.setCoinName(this.coinName);
+//			wallet.setWalletAddress(walletAddress);
+//			
+//
+//			wallet.getLastKnownValues();
+//			
+//			
+//			// now calculate the values
+//			this.totalBalanceSatoshi += wallet.getBalanceSatoshi();
+//			this.totalBalanceCoin += wallet.getBalanceCoin();
+//			this.totalCurrentValue += wallet.getCurrentValue();
+//			
+//		}
+//		LOG.trace("finished calculatePreviousTotalValuesForCoin()");
+//	}
 	
 }

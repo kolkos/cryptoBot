@@ -105,13 +105,13 @@ public class Request {
 		if(this.requestedCoin.equals("all")) {
 			LOG.info("All coins are requested");
 			// all coins will result in a loop through the coins in the database
-			for(String coinName : portfolio.getCoins()) {
+			for(String coinName : portfolio.getCoinList()) {
 				this.runCoinRequest(coinName);
 				this.generateStatusMessageForCoin(coinName);
 			}
 		}else {
 			LOG.info("Only {} will be handled", this.requestedCoin);
-			if(portfolio.getCoins().contains(this.requestedCoin)) {
+			if(portfolio.getCoinList().contains(this.requestedCoin)) {
 				this.runCoinRequest(this.requestedCoin);
 				this.generateStatusMessageForCoin(this.requestedCoin);
 			}else {

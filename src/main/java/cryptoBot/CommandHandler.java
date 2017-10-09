@@ -351,7 +351,7 @@ public class CommandHandler extends CryptoBot {
 		// get the coins in the portfolio
 		Portfolio portfolio = new Portfolio();
 		portfolio.setCoins();
-		List<String> coins = portfolio.getCoins();
+		List<String> coins = portfolio.getCoinList();
 		
 		LOG.info("found the following coins: {}", coins);
 		

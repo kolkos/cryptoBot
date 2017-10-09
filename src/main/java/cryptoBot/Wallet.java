@@ -2,7 +2,7 @@ package cryptoBot;
 
 import java.net.URL;
 import java.sql.ResultSet;
-import java.util.Scanner;
+import java.util.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,21 +16,13 @@ import com.google.gson.JsonParser;
 public class Wallet {
 	private String walletAddress;
 	private String coinName;
-	private String currency;
+	private static String currency = "eur";
 	private int balanceSatoshi;
 	private double balanceCoin;
 	private double currentValue;
-	private int requestID;
 	
 	private static final Logger LOG = LogManager.getLogger(Wallet.class);
 	
-	public int getRequestID() {
-		return this.requestID;
-	}
-
-	public void setRequestID(int requestID) {
-		this.requestID = requestID;
-	}
 
 	/**
 	 * Set the required currency eur/usd/etc
@@ -99,59 +91,28 @@ public class Wallet {
 	public double getCurrentValue() {
 		return this.currentValue;
 	}
-	
-	/**
-	 * Method to print the json response in a pretty way
-	 * @param jsonString: the JSON response string
-	 */
-	private void prettyPrintJSON(String jsonString) {
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		JsonParser jp = new JsonParser();
-		JsonElement je = jp.parse(jsonString);
-		String prettyJsonString = gson.toJson(je);
-		System.out.println(prettyJsonString);
-	}
-	
-	/**
-	 * General method to handle the API requests
-	 * @param the URL of the API request
-	 * @return a JSONObject containing the response of the server
-	 * @throws Exception
-	 */
-	private JSONObject doAPIRequest(String urlString) throws Exception {
-		LOG.trace("Entering doAPIRequest(), url={}", urlString);
 		
-		URL url = new URL(urlString);
-		
-		// read from the URL
-	    Scanner scan = new Scanner(url.openStream());
-	    String str = new String();
-	    while (scan.hasNext())
-	        str += scan.nextLine();
-	    scan.close();
-	    
-	    // build a JSON object
-	    JSONObject jsonObject = new JSONObject(str);
-	    
-	    // pretty print for debugging
-	    //this.prettyPrintJSON(str);
-	    
-	    LOG.trace("Fished doAPIRequest()");
-	    
-	    return jsonObject;
-	}
 	
 	/**
-	 * This method does a API call to get the current balance of this object
+	 * This method gets the current value for the selected wallet. It uses the api request to get the values
+	 * It also registers the attributes
+	 * @param coinName the name of the coin
+	 * @param walletAddress the address of the wallet 
 	 */
-	public void getWalletValue() {
+	public void getWalletValue(String coinName, String walletAddress) {
 		LOG.trace("Entering getWalletValue()");
 		
+		// register the attributes
+		this.setCoinName(coinName);
+		this.setWalletAddress(walletAddress);
+		
+		
 		// build the url for the request
-		String url = "https://api.blockcypher.com/v1/" + this.coinName + "/main/addrs/" + this.walletAddress + "/balance";
 		try {
 			// try to run the json request
-			JSONObject json = this.doAPIRequest(url);
+			
+			ApiRequest api = new ApiRequest();
+			JSONObject json = api.walletInfoApiRequest(this.coinName, this.walletAddress);
 			
 			// get the current balance (in Satoshi) from the response
 			//String balanceSatoshiString = (String) 
@@ -164,14 +125,14 @@ public class Wallet {
 			this.calculateCurrentValue();
 			
 			// now register the result
-			this.registerCurrentResult();
+//			this.registerCurrentResult();
 			
-			LOG.info("API request ({}) OK.", url);
+			LOG.info("API request OK.");
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
-			LOG.fatal("API request ({}) ERROR: {}", url, e);
+			LOG.fatal("API request ERROR: {}", e);
 		}
 		LOG.trace("Finished getWalletValue()");
 	}
@@ -191,11 +152,11 @@ public class Wallet {
 	private void calculateCurrentValue() {
 		LOG.trace("Entering calculateCurrentValue()");
 		// build the url for the api request
-		String url = "https://www.bitstamp.net/api/v2/ticker_hour/" + this.coinName + this.currency + "/";
 		
 		try {
 			// try to get the current coin value from the api
-			JSONObject json = this.doAPIRequest(url);
+			ApiRequest api = new ApiRequest();
+			JSONObject json = api.currentCoinValueApiRequest(this.coinName, Wallet.currency);
 			
 			// get the current value of the coin from the json response
 			double currentCoinValue = Double.parseDouble((String) json.get("last"));
@@ -203,12 +164,12 @@ public class Wallet {
 			// calculate the current value of the coin
 			this.currentValue = this.balanceCoin * currentCoinValue;
 			
-			LOG.info("API request ({}) OK.", url);
+			LOG.info("API request OK.");
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
-			LOG.fatal("API request ({}) ERROR: {}", url, e);
+			LOG.fatal("API request ERROR: {}", e);
 		}
 		LOG.trace("Finished calculateCurrentValue()");
 		
@@ -274,29 +235,6 @@ public class Wallet {
 		LOG.trace("Finished getLastKnownValues()");
 	}
 	
-	/**
-	 * Get the last known value of the coins 
-	 */
-	public void getFirstKnownValues() {
-		LOG.trace("Entering getFirstKnownValues()");
-		// first get the last entry of the wallet
-		String query = "SELECT" + 
-				" results.balance_satoshi as balanceSatoshi," + 
-				" results.balance_coin as balanceCoin," + 
-				" results.current_value as currentValue," + 
-				" results.currency as currency," + 
-				" coins.name as coinName" + 
-				" FROM results, coins, wallets" + 
-				" WHERE results.wallet_id = wallets.id" + 
-				" AND coins.id = wallets.coin_id" + 
-				" AND wallets.address = ?" +
-				" ORDER BY results.timestamp ASC" +
-				" LIMIT 1";
-		
-		// now call the method to handle the query
-		this.getWalletDetailsFromDB(query);
-		LOG.trace("Finished getFirstKnownValues()");
-	}
 	
 	/**
 	 * This method gets the ID of the wallet from the database to be able to use this ID to register the result
@@ -333,33 +271,33 @@ public class Wallet {
 		return walletID;
 	}
 	
-	/**
-	 * Register the current result
-	 */
-	public void registerCurrentResult() {
-		LOG.trace("Entering registerCurrentResult()");
-		
-		int walletID = this.getWalletID();
-		if(walletID != 0) {
-			String query = "INSERT INTO results "+
-		                   "(request_id, wallet_id, balance_satoshi, balance_coin, current_value, currency) " +
-		                   "VALUES (?, ?, ?, ?, ?, ?)";
-			Object[] parameters = new Object[] {this.requestID, walletID, this.balanceSatoshi, this.balanceCoin, this.currentValue, this.currency};
-			
-			MySQLAccess db = new MySQLAccess();
-			try {
-				db.executeUpdateQuery(query, parameters);
-				LOG.info("Registered result to the database");
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				//e.printStackTrace();
-				LOG.fatal("Error saving the result to the database: {}", e);
-			}finally {
-				db.close();
-			}
-			
-		}
-		LOG.trace("Finished registerCurrentResult()");
-	}
+//	/**
+//	 * Register the current result
+//	 */
+//	public void registerCurrentResult() {
+//		LOG.trace("Entering registerCurrentResult()");
+//		
+//		int walletID = this.getWalletID();
+//		if(walletID != 0) {
+//			String query = "INSERT INTO results "+
+//		                   "(request_id, wallet_id, balance_satoshi, balance_coin, current_value, currency) " +
+//		                   "VALUES (?, ?, ?, ?, ?, ?)";
+//			Object[] parameters = new Object[] {this.requestID, walletID, this.balanceSatoshi, this.balanceCoin, this.currentValue, this.currency};
+//			
+//			MySQLAccess db = new MySQLAccess();
+//			try {
+//				db.executeUpdateQuery(query, parameters);
+//				LOG.info("Registered result to the database");
+//			} catch (Exception e) {
+//				// TODO Auto-generated catch block
+//				//e.printStackTrace();
+//				LOG.fatal("Error saving the result to the database: {}", e);
+//			}finally {
+//				db.close();
+//			}
+//			
+//		}
+//		LOG.trace("Finished registerCurrentResult()");
+//	}
 	
 }

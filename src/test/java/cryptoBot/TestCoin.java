@@ -9,53 +9,47 @@ import org.junit.Test;
 public class TestCoin {
 
 	@Test
-	public void testCoins() {
-		Coin ltc = new Coin();
-		ltc.setCoinName("ltc");
-		ltc.setWalletAddresses();
+	public void testSingleCoin() throws Exception {
+		String coinName = "tst";
 		
-		List<String> expectedAddresses = new ArrayList<>();
-		expectedAddresses.add("LMWPhNFedT8e6X7iRQdh456hvZwYnxyStV");
+		Coin coin = new Coin();
+						
+		// now get the address
+		String expectedWalletAddress = "1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX";
+		List<String> expectedWalletAddresses = new ArrayList<>();
+		expectedWalletAddresses.add(expectedWalletAddress);
 		
-		assertEquals(expectedAddresses, ltc.getWalletAddresses());
+		assertEquals(expectedWalletAddresses, coin.getWalletAddresses(coinName));
+		assertEquals(coinName, coin.getCoinName());
+		
 		
 	}
 	
 	@Test
-	public void getTotalBalanceTest() throws Exception {
-		Coin ltc = new Coin();
-		ltc.setCoinName("ltc");
-		ltc.setWalletAddresses();
+	public void testCoinWallets() {
+		String coinName = "ltc";
+		Coin coin = new Coin();
 		
-		ltc.calculateCurrentTotalValuesForCoin();
+		// get the wallets for the coin
+		coin.getWalletsForCoin(coinName);
 		
-		assertEquals("ltc", ltc.getCoinName());
+		List<Wallet> wallets = coin.getWallets();
 		
+		// loop through the results
+		for(Wallet wallet : wallets) {
+			System.out.println(String.format("Coin: %s", wallet.getCoinName()));
+			System.out.println(String.format("Address: %s", wallet.getWalletAddress()));
+			System.out.println(String.format("Balance: %f", wallet.getBalanceCoin()));
+			System.out.println(String.format("Value: %.2f", wallet.getCurrentValue()));
+		}
 		
-		System.out.println("Satoshi: " + ltc.getTotalBalanceSatoshi());
-		System.out.println("Coin: " + ltc.getTotalBalanceCoin());
-		System.out.println("Value: " + ltc.getTotalCurrentValue());
+		System.out.println(String.format("Total value: %.2f", coin.getTotalCoinValue()));
+		
 		
 	}
 	
-	@Test
-	public void getOldValues() throws Exception {
-		Coin ltc = new Coin();
-		ltc.setCoinName("btc");
-		ltc.setWalletAddresses();
-		
-		ltc.calculatePreviousTotalValuesForCoin(true);
-		
-		System.out.println("Satoshi: " + ltc.getTotalBalanceSatoshi());
-		System.out.println("Coin: " + ltc.getTotalBalanceCoin());
-		System.out.println("Value: " + ltc.getTotalCurrentValue());
-		
-		assertEquals(734343, ltc.getTotalBalanceSatoshi());
-		assertEquals(0.00734343, ltc.getTotalBalanceCoin(), 10);
-		assertEquals(24.87, ltc.getTotalCurrentValue(), 10);
-		
-		
-		
-	}
+
 
 }
+
+
