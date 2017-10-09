@@ -41,10 +41,11 @@ public class TestCoin {
 			System.out.println(String.format("Address: %s", wallet.getWalletAddress()));
 			System.out.println(String.format("Balance: %f", wallet.getBalanceCoin()));
 			System.out.println(String.format("Value: %.2f", wallet.getCurrentValue()));
+			System.out.println(String.format("Last value: %.2f", wallet.getLastKnownValue()));
 		}
 		
-		System.out.println(String.format("Total value: %.2f", coin.getTotalCoinValue()));
-		
+		System.out.println(String.format("Total value: %.2f", coin.getTotalCurrentCoinValue()));
+		System.out.println(String.format("Last value: %.2f", coin.getTotalLastKnownCoinValue()));
 		
 	}
 	

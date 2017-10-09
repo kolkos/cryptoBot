@@ -10,16 +10,21 @@ public class Coin {
 	private String coinName;
 	private List<String> walletAddresses;
 	private List<Wallet> wallets;
-	private double totalCoinValue = 0;
+	private double totalCurrentCoinValue = 0;
+	private double totalLastKnownCoinValue = 0;
 	
 	private static final Logger LOG = LogManager.getLogger(Coin.class);
 	
+	public double getTotalLastKnownCoinValue() {
+		return totalLastKnownCoinValue;
+	}
+
 	public List<Wallet> getWallets() {
 		return this.wallets;
 	}
 	
-	public double getTotalCoinValue() {
-		return totalCoinValue;
+	public double getTotalCurrentCoinValue() {
+		return totalCurrentCoinValue;
 	}
 
 	/**
@@ -96,7 +101,10 @@ public class Coin {
 			wallet.getWalletValue(this.coinName, walletAddress);
 			
 			// add the value of this wallet to the total value
-			this.totalCoinValue += wallet.getCurrentValue();
+			this.totalCurrentCoinValue += wallet.getCurrentValue();
+			
+			// calculate the last known coin value
+			this.totalLastKnownCoinValue += wallet.getLastKnownValue();
 						
 			// now add this address to the wallets list
 			this.wallets.add(wallet);

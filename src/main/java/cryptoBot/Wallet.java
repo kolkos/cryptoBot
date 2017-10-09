@@ -8,36 +8,36 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-
 public class Wallet {
 	private String walletAddress;
 	private String coinName;
 	private static String currency = "eur";
-	private int balanceSatoshi;
+	
 	private double balanceCoin;
 	private double currentValue;
+	private double lastKnownValue;
+	
+	private int walletID;
+	private int balanceSatoshi;
+	private int requestID = 0;
 	
 	private static final Logger LOG = LogManager.getLogger(Wallet.class);
 	
 
-	/**
-	 * Set the required currency eur/usd/etc
-	 * @param currency: the name of the currency
-	 */
-	public void setCurrency(String currency) {
-		this.currency = currency;
+	public int getRequestID() {
+		return requestID;
 	}
-	
-	/**
-	 * Get the current currency
-	 * @return the currency of this object
-	 */
-	public String getCurrency() {
-		return currency;
+
+	public void setRequestID(int requestID) {
+		this.requestID = requestID;
+	}
+
+	public double getLastKnownValue() {
+		return lastKnownValue;
+	}
+
+	public int getWalletID() {
+		return this.walletID;
 	}
 	
 	/**
@@ -106,8 +106,7 @@ public class Wallet {
 		this.setCoinName(coinName);
 		this.setWalletAddress(walletAddress);
 		
-		
-		// build the url for the request
+
 		try {
 			// try to run the json request
 			
@@ -124,8 +123,14 @@ public class Wallet {
 			// now calculate the value of the wallet
 			this.calculateCurrentValue();
 			
-			// now register the result
-//			this.registerCurrentResult();
+			// get the last known value
+			this.lastKnownValue = this.getPreviousKnownWalletValue();
+
+			// get the ID of this wallet
+			this.walletID = this.getWalletIDFromDB();
+			
+			// register this result
+			this.registerCurrentResult();
 			
 			LOG.info("API request OK.");
 			
@@ -175,48 +180,7 @@ public class Wallet {
 		
 	}
 	
-	/**
-	 * Semi-general method to get the coin values from the database. The query to run is determined by other methods
-	 * @param query the SQL query to get the results
-	 */
-	private void getWalletDetailsFromDB(String query) {
-		LOG.trace("Entering getWalletDetailsFromDB(), query={}", query);
-		MySQLAccess db = new MySQLAccess();
-		
-		// first get the last entry of the wallet
-
-		Object[] parameters = new Object[] {this.walletAddress};
-		
-		try {
-			db.executeSelectQuery(query, parameters);
-			
-			ResultSet resultSet = db.getResultSet();
-
-			// now register the received values
-			while (resultSet.next()) {
-				this.coinName = resultSet.getString("coinName");
-				this.currency = resultSet.getString("currency");
-				this.balanceSatoshi = resultSet.getInt("balanceSatoshi");
-				this.balanceCoin = resultSet.getDouble("balanceCoin");
-				this.currentValue = resultSet.getDouble("currentValue");
-			}
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			LOG.fatal("Error getting coin values from database", e);
-		}finally {
-			db.close();
-		}
-		LOG.trace("Finished getWalletDetailsFromDB()");
-	}
-	
-	/**
-	 * Get the last known value of the coins 
-	 */
-	public void getLastKnownValues() {
-		LOG.trace("Entering getLastKnownValues()");
-		// first get the last entry of the wallet
+	private double getPreviousKnownWalletValue() {
 		String query = "SELECT" + 
 				" results.balance_satoshi as balanceSatoshi," + 
 				" results.balance_coin as balanceCoin," + 
@@ -229,10 +193,24 @@ public class Wallet {
 				" AND wallets.address = ?" +
 				" ORDER BY results.timestamp DESC" +
 				" LIMIT 1";
+		Object[] parameters = new Object[] {this.walletAddress};
 		
-		// now call the method to handle the query
-		this.getWalletDetailsFromDB(query);
-		LOG.trace("Finished getLastKnownValues()");
+		MySQLAccess db = new MySQLAccess();
+		
+		double lastKnownValue = 0;
+		
+		try {
+			db.executeSelectQuery(query, parameters);
+			ResultSet resultSet = db.getResultSet();
+			while (resultSet.next()) {
+				lastKnownValue = resultSet.getDouble("currentValue");
+			}
+		} catch (Exception e) {
+			LOG.fatal("Error getting coin values from database", e);
+		} finally {
+			db.close();
+		}
+		return lastKnownValue;
 	}
 	
 	
@@ -240,7 +218,7 @@ public class Wallet {
 	 * This method gets the ID of the wallet from the database to be able to use this ID to register the result
 	 * @return the ID of the wallet
 	 */
-	private int getWalletID() {
+	private int getWalletIDFromDB() {
 		LOG.trace("Entering getWalletID()");
 		
 		int walletID = 0;
@@ -271,33 +249,33 @@ public class Wallet {
 		return walletID;
 	}
 	
-//	/**
-//	 * Register the current result
-//	 */
-//	public void registerCurrentResult() {
-//		LOG.trace("Entering registerCurrentResult()");
-//		
-//		int walletID = this.getWalletID();
-//		if(walletID != 0) {
-//			String query = "INSERT INTO results "+
-//		                   "(request_id, wallet_id, balance_satoshi, balance_coin, current_value, currency) " +
-//		                   "VALUES (?, ?, ?, ?, ?, ?)";
-//			Object[] parameters = new Object[] {this.requestID, walletID, this.balanceSatoshi, this.balanceCoin, this.currentValue, this.currency};
-//			
-//			MySQLAccess db = new MySQLAccess();
-//			try {
-//				db.executeUpdateQuery(query, parameters);
-//				LOG.info("Registered result to the database");
-//			} catch (Exception e) {
-//				// TODO Auto-generated catch block
-//				//e.printStackTrace();
-//				LOG.fatal("Error saving the result to the database: {}", e);
-//			}finally {
-//				db.close();
-//			}
-//			
-//		}
-//		LOG.trace("Finished registerCurrentResult()");
-//	}
+	/**
+	 * Register the current result
+	 */
+	public void registerCurrentResult() {
+		LOG.trace("Entering registerCurrentResult()");
+		
+		int walletID = this.getWalletID();
+		if(walletID != 0) {
+			String query = "INSERT INTO results "+
+		                   "(request_id, wallet_id, balance_satoshi, balance_coin, current_value, currency) " +
+		                   "VALUES (?, ?, ?, ?, ?, ?)";
+			Object[] parameters = new Object[] {this.requestID, walletID, this.balanceSatoshi, this.balanceCoin, this.currentValue, this.currency};
+			
+			MySQLAccess db = new MySQLAccess();
+			try {
+				db.executeUpdateQuery(query, parameters);
+				LOG.info("Registered result to the database");
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				//e.printStackTrace();
+				LOG.fatal("Error saving the result to the database: {}", e);
+			}finally {
+				db.close();
+			}
+			
+		}
+		LOG.trace("Finished registerCurrentResult()");
+	}
 	
 }

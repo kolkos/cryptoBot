@@ -2,9 +2,11 @@ package cryptoBot;
 
 import static java.lang.Math.toIntExact;
 
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,11 +18,17 @@ import org.telegram.telegrambots.exceptions.TelegramApiException;
 
 public class CommandHandler extends CryptoBot {
 	private String firstName;
-	private long chatID;
+	private long chatIDTelegram;
 	private long messageID;
 	private String incomingMessage;
-	
+	private String uuid;
+	private int chatID;
+		
 	private static final Logger LOG = LogManager.getLogger(CommandHandler.class);
+	
+	public CommandHandler() {
+		this.uuid = UUID.randomUUID().toString();
+	}
 	
 	/*
 	 * ==========================================================================================
@@ -48,16 +56,16 @@ public class CommandHandler extends CryptoBot {
 	 * Get the registered chatID
 	 * @return the chatID
 	 */
-	public long getChatID() {
-		return chatID;
+	public long getChatIDTelegram() {
+		return chatIDTelegram;
 	}
 	
 	/**
 	 * Register the chat ID
 	 * @param chatID the ID of the chat from where the request is send
 	 */
-	public void setChatID(long chatID) {
-		this.chatID = chatID;
+	public void setChatIDTelegram(long chatID) {
+		this.chatIDTelegram = chatID;
 	}
 	
 	/**
@@ -100,6 +108,140 @@ public class CommandHandler extends CryptoBot {
 	 */
 	
 	/**
+	 * Register the incoming chat message. This method checks if the chatID is already registerd.
+	 * If not, this method will register the chatID. 
+	 * By default the active and receive_update are set to 0. This means the chat isn't allowed to
+	 * send requests to the bot.
+	 * @param chatIDTelegram the chatID from the group/user which send a request to the bot
+	 * @throws Exception mysql error
+	 */
+	public void registerChat() throws Exception {
+		LOG.trace("entered registerChat()");
+		
+		// check if the chat is already registered
+		String query = "SELECT chat_id FROM chats WHERE chat_id = ?";
+		Object[] parameters = new Object[] {this.chatIDTelegram};
+		MySQLAccess db = new MySQLAccess();
+		db.executeSelectQuery(query, parameters);
+		
+		ResultSet resultSet = db.getResultSet();
+		
+		if(resultSet.next() == false){
+			LOG.info("chatID {} is not registered yet", this.chatIDTelegram);
+			
+			// the chat is not registered, register it
+			query = "INSERT INTO chats (chat_id) VALUES (?)";
+			parameters = new Object[] {this.chatIDTelegram};
+			// run the query
+			db.executeUpdateQuery(query, parameters);
+		}
+		
+		db.close();
+		LOG.trace("finished registerChat()");
+	}
+	
+	/**
+	 * This method checks if the chat from where the request is send is allowed to send requests to the bot.
+	 * To check this, this method checks if the chat_id is in the database and if active is set to 1
+	 * @param chatIDTelegram the id of the chat that needs checking
+	 * @return true if the chat is allowed, else false
+	 */
+	public boolean checkIfChatIsAllowedToSendRequests() {
+		LOG.trace("entered checkIfChatIsAllowedToSendRequests()");
+		// now check if the chat is in the database and if it is allowed to place requests for this bot
+		String query = "SELECT * FROM chats WHERE chat_id = ? AND active = 1";
+		Object[] parameters = new Object[] {this.chatIDTelegram};
+		MySQLAccess db = new MySQLAccess();
+		try {
+			db.executeSelectQuery(query, parameters);
+			
+			ResultSet resultSet = db.getResultSet();
+			// check if the resultset contains something
+			if(! resultSet.next()) {
+				// no results found, this means that the bot isn't allowed to send to this group
+				String messageText = String.format("Hoi! Wij kennen elkaar nog niet. Vraag even aan Anton (@Kolkos) of hij deze chat wil activeren. Vermeld dit chatID: %d", this.chatIDTelegram);
+				this.sendStringToChat(messageText);
+				return false;
+			}
+		} catch (Exception e) {
+			db.close();
+			LOG.fatal("Error getting chats from database: {}", e);
+			return false;
+		}finally {
+			db.close();
+		}
+		// if the code reaches this part, the chat is allowed to send messages
+		LOG.trace("finished checkIfChatIsAllowedToSendRequests()");
+		return true;
+	}
+	
+	/**
+	 * Get the ID of the chat in the database
+	 * @return the ID of the chat in the database
+	 */
+	private int getChatIDFromDB() {
+		LOG.trace("entered getChatIDFromDB()");
+		int chatID = 0;
+		
+		String query = "SELECT id FROM chats WHERE chat_id = ?";
+		Object[] parameters = new Object[] {this.chatIDTelegram};
+		MySQLAccess db = new MySQLAccess();
+		
+		try {
+			db.executeSelectQuery(query, parameters);
+			
+			ResultSet resultSet = db.getResultSet();
+			while(resultSet.next()) {
+				chatID = resultSet.getInt("id");
+			}
+			
+			
+		} catch (Exception e) {
+			LOG.fatal("Error getting chat ID from database: {}", e);
+		} finally {
+			db.close();
+		}
+		
+		LOG.trace("finished getChatIDFromDB()");
+		return chatID;
+	}
+	
+	/**
+	 * Register the current request into the database
+	 */
+	public void registerRequestInDatabase() {
+		LOG.trace("entered registerRequestInDatabase()");
+		
+		this.chatID = this.getChatIDFromDB();
+		String query = "INSERT INTO requests (uuid, chat_id, firstName, command) VALUES (?, ?, ?, ?)";
+		Object[] parameters = new Object[] {this.uuid, this.chatID, this.firstName, this.incomingMessage};
+		MySQLAccess db = new MySQLAccess();
+		
+		try {
+			db.executeUpdateQuery(query, parameters);
+		} catch (Exception e) {
+			LOG.fatal("Error registering request: {}", e);
+		} finally {
+			db.close();
+		}
+		LOG.trace("finished registerRequestInDatabase()");
+	}
+	
+	/**
+	 * This method sends a string to a chat. This method combines the methods:
+	 * generateSimpleSendMessage
+	 * sendMessageToChat
+	 * @param messageText text to send to the chat
+	 */
+	public void sendStringToChat(String messageText) {
+		LOG.trace("entered sendStringToChat(), messageText={}", messageText);
+		SendMessage message = this.generateSimpleSendMessage(messageText);
+		this.sendMessageToChat(message);
+		LOG.trace("finished sendStringToChat()");
+	}
+	
+	
+	/**
 	 * This method transforms a string to a SendMessage
 	 * @param messageText
 	 * @return prepared SendMessage
@@ -108,7 +250,7 @@ public class CommandHandler extends CryptoBot {
 		LOG.trace("entered generateSimpleSendMessage(), messageText={}", messageText);
 		
 		SendMessage message = new SendMessage() // Create a message object object
-				.setChatId(this.chatID).setText(messageText);
+				.setChatId(this.chatIDTelegram).setText(messageText);
 		
 		LOG.trace("finished generateSimpleSendMessage()");
 		
@@ -124,6 +266,7 @@ public class CommandHandler extends CryptoBot {
 		
 		try {
 			sendMessage(message); // Sending our message object to user
+			LOG.trace("Message send: {}", message);
 		} catch (TelegramApiException e) {
 			// TODO: iets met fout doen
 			//e.printStackTrace();
@@ -142,11 +285,11 @@ public class CommandHandler extends CryptoBot {
 		LOG.trace("entered generateSimpleEditMessageText(), messageText={}", messageText);
 		
 		EditMessageText message = new EditMessageText()
-                .setChatId(this.chatID)
+                .setChatId(this.chatIDTelegram)
                 .setMessageId(toIntExact(this.messageID))
                 .setText(messageText);
 		
-		LOG.trace("entered generateSimpleEditMessageText()");
+		LOG.trace("finished generateSimpleEditMessageText()");
 		
 		return message;
 		
@@ -170,13 +313,13 @@ public class CommandHandler extends CryptoBot {
 	
 	/**
 	 * Shortcut to register the incoming chat message. This method is used to force registering the required variables
-	 * @param chatID the ID of the chat where the message is send from
+	 * @param chatIDTelegram the ID of the chat where the message is send from
 	 * @param firstName the name of the user which has send the message
 	 * @param incomingChatMessage the incoming chat message/command
 	 */
-	public void registerChatMessage(long chatID, String firstName, String incomingChatMessage) {
-		LOG.trace("entered registerChatMessage(): chat_id={}, firstName={}, incomingChatMessage={}", chatID, firstName, incomingChatMessage);
-		this.setChatID(chatID);
+	public void registerChatMessage(long chatIDTelegram, String firstName, String incomingChatMessage) {
+		LOG.trace("entered registerChatMessage(): chat_id={}, firstName={}, incomingChatMessage={}", chatIDTelegram, firstName, incomingChatMessage);
+		this.setChatIDTelegram(chatIDTelegram);
 		this.setFirstName(firstName);
 		this.setIncomingMessage(incomingChatMessage);
 		LOG.trace("finished registerChatMessage()");
@@ -184,14 +327,14 @@ public class CommandHandler extends CryptoBot {
 	
 	/**
 	 * Shortcut to register the incoming callback query. This method is used to force registering the required variables
-	 * @param chatID chatID the ID of the callback query where the message is send from
+	 * @param chatIDTelegram chatID the ID of the callback query where the message is send from
 	 * @param messageID the ID of the message containing the inline query
 	 * @param firstName the name of the user which has send the callback query (clicked on the button)
 	 * @param incomingCallbackQuery the value of the inline keyboard button
 	 */
-	public void registerCallbackQuery(long chatID, long messageID, String firstName, String incomingCallbackQuery) {
-		LOG.trace("entered registerCallbackQuery(): chat_id={}, messageID={}, firstName={}, incomingCallbackQuery={}", chatID, messageID, firstName, incomingCallbackQuery);
-		this.setChatID(chatID);
+	public void registerCallbackQuery(long chatIDTelegram, long messageID, String firstName, String incomingCallbackQuery) {
+		LOG.trace("entered registerCallbackQuery(): chat_id={}, messageID={}, firstName={}, incomingCallbackQuery={}", chatIDTelegram, messageID, firstName, incomingCallbackQuery);
+		this.setChatIDTelegram(chatIDTelegram);
 		this.setMessageID(messageID);
 		this.setFirstName(firstName);
 		this.setIncomingMessage(incomingCallbackQuery);
@@ -333,6 +476,47 @@ public class CommandHandler extends CryptoBot {
 	 * ==========================================================================================
 	 */
 	
+	
+	public void sendBotOptions() {
+		LOG.trace("entered sendBotOptions()");
+		
+		String messageText = "Maak een keuze uit 1 van de volgende opties:";
+		
+		SendMessage message = new SendMessage() // Create a message object object
+				.setChatId(this.chatIDTelegram).setText(messageText);
+		
+		
+		InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+		List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+		
+		// create first line
+		List<InlineKeyboardButton> rowInline = new ArrayList<>();
+		rowInline.add(new InlineKeyboardButton().setText("Snel waarde portfolio opvragen")
+				.setCallbackData("method=getTotalPortfolioValue"));
+		rowsInline.add(rowInline);
+		
+		// create the second line
+		rowInline = new ArrayList<>();
+		rowInline.add(new InlineKeyboardButton().setText("Portfolio")
+				.setCallbackData("method=getPortfolioCoins"));
+		rowsInline.add(rowInline);
+		
+		// create the third line
+		rowInline = new ArrayList<>();
+		rowInline.add(new InlineKeyboardButton().setText("Help")
+				.setCallbackData("method=editMessageHelpText"));
+		rowsInline.add(rowInline);
+		
+		markupInline.setKeyboard(rowsInline);
+		message.setReplyMarkup(markupInline);
+		
+		// now send this message
+		this.sendMessageToChat(message);
+		
+		LOG.trace("finished sendBotOptions()");
+	}
+	
+	
 	/**
 	 * This method creates a message containing the registered coins (with at least one wallet attached)
 	 * Next to the found coins, it will contain a option to request all the coins
@@ -344,13 +528,13 @@ public class CommandHandler extends CryptoBot {
 		String messageText = "Op het moment heb ik de volgende coins in het porfolio gevonden:";
 		
 		EditMessageText message = new EditMessageText()
-                .setChatId(this.chatID)
+                .setChatId(this.chatIDTelegram)
                 .setMessageId(toIntExact(this.messageID))
                 .setText(messageText);
 		
 		// get the coins in the portfolio
 		Portfolio portfolio = new Portfolio();
-		portfolio.setCoins();
+		portfolio.setCoinList();
 		List<String> coins = portfolio.getCoinList();
 		
 		LOG.info("found the following coins: {}", coins);
@@ -386,6 +570,12 @@ public class CommandHandler extends CryptoBot {
 		return message;
 	}
 	
+	private void getWalletsForCoin(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
+		// TODO: methode schrijven waarmee de wallets for the coins worden opgehaald...
+		// bij alles moet de coin naam worden toegevoegd
+	
+	}
+	
 	/**
 	 * Transforms the help text into a EditMessage. This method is called when the help button is pressed
 	 * @return
@@ -396,7 +586,7 @@ public class CommandHandler extends CryptoBot {
 		String messageText = this.generateHelpText();
 		
 		EditMessageText message = new EditMessageText()
-                .setChatId(this.chatID)
+                .setChatId(this.chatIDTelegram)
                 .setMessageId(toIntExact(this.messageID))
                 .setText(messageText);
 		
@@ -429,7 +619,7 @@ public class CommandHandler extends CryptoBot {
 		String messageText = "Vanaf welk moment wil je de voortgang zien:";
 		
 		EditMessageText message = new EditMessageText()
-                .setChatId(this.chatID)
+                .setChatId(this.chatIDTelegram)
                 .setMessageId(toIntExact(this.messageID))
                 .setText(messageText);
 		
@@ -488,7 +678,7 @@ public class CommandHandler extends CryptoBot {
 		String statusMessage = request.getStatusMessage();
 		
 		EditMessageText message = new EditMessageText()
-                .setChatId(this.chatID)
+                .setChatId(this.chatIDTelegram)
                 .setMessageId(toIntExact(this.messageID))
                 .setText(statusMessage);
 		
@@ -512,7 +702,7 @@ public class CommandHandler extends CryptoBot {
 		String statusMessage = request.getStatusMessage();
 		
 		EditMessageText message = new EditMessageText()
-                .setChatId(this.chatID)
+                .setChatId(this.chatIDTelegram)
                 .setMessageId(toIntExact(this.messageID))
                 .setText(statusMessage);
 		

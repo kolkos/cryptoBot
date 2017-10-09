@@ -9,7 +9,8 @@ import org.apache.logging.log4j.Logger;
 public class Portfolio {
 	private List<String> coinList;
 	private List<Coin> coins;
-	private double totalValuePortfolio = 0;
+	private double totalCurrentValuePortfolio = 0;
+	private double totalPreviousValuePortfolio = 0;
 	
 	private static final Logger LOG = LogManager.getLogger(Portfolio.class);
 	
@@ -25,9 +26,14 @@ public class Portfolio {
 		this.receiveCoinsInPortfolio();
 	}
 	
-	public double getTotalValuePortfolio() {
-		return this.totalValuePortfolio;
+	public double getTotalCurrentValuePortfolio() {
+		return this.totalCurrentValuePortfolio;
 	}
+
+	public double getTotalPreviousValuePortfolio() {
+		return totalPreviousValuePortfolio;
+	}
+
 
 	/**
 	 * Getting the coins registered in the portfolio. This method will get all used coins with a wallet attached.
@@ -75,7 +81,10 @@ public class Portfolio {
 		coin.getWalletsForCoin(coinName);
 		
 		// add the total coin value to the portfolio value
-		this.totalValuePortfolio += coin.getTotalCoinValue();
+		this.totalCurrentValuePortfolio += coin.getTotalCurrentCoinValue();
+		
+		// add the previous known value
+		this.totalPreviousValuePortfolio += coin.getTotalLastKnownCoinValue();
 		
 		// add to the list
 		this.coins.add(coin);
@@ -98,7 +107,10 @@ public class Portfolio {
 			coin.getWalletsForCoin(coinName);
 			
 			// calculate the total value
-			this.totalValuePortfolio += coin.getTotalCoinValue();
+			this.totalCurrentValuePortfolio += coin.getTotalCurrentCoinValue();
+			
+			// add the previous known value
+			this.totalPreviousValuePortfolio += coin.getTotalLastKnownCoinValue();
 			
 			// add to the list
 			this.coins.add(coin);

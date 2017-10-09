@@ -58,33 +58,36 @@ public class CryptoBot extends TelegramLongPollingBot {
 			
 			String incomingMessageText = update.getMessage().getText();
 			long chatID = update.getMessage().getChatId();
-
+			String firstName = update.getMessage().getFrom().getFirstName();
+			
+			// call the CommandHandler
+			CommandHandler commandHandler = new CommandHandler();
+			
+			// now register this incoming message
+			commandHandler.registerChatMessage(chatID, firstName, incomingMessageText);
+			
 			// first register this chat (if necessary)
 			try {
-				this.registerChat(chatID);
-			} catch (Exception e1) {
+				commandHandler.registerChat();
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				e1.printStackTrace();
-				LOG.fatal("error registering the chatID {}", e1);
+				LOG.fatal("error registering the chatID {}", e);
 			}
 			
 			// check if the chat is allowed to send requests
-			if(! this.checkIfChatIsAllowedToSendRequests(chatID)) {
+			if(! commandHandler.checkIfChatIsAllowedToSendRequests()) {
 				// now allowed, exit method
 				LOG.info("Chat isn't authorized (yet).");
 				return;
 			}
 			
-			
 			// make the message lowercase
 			incomingMessageText = incomingMessageText.toLowerCase();
 			//System.out.println(incomingMessageText);
 			
-			String firstName = update.getMessage().getFrom().getFirstName();
-			
 			LOG.trace("Incoming chat message {}.", incomingMessageText);
 			
-			// first check if the bot contains the word 'bot'
+			// first check if the message contains the word 'bot'
 			Pattern patternBot = Pattern.compile("^(.*?)(\\bbot\\b)(.*)$");
 			Matcher matcher = patternBot.matcher(incomingMessageText);
 			// only do something when the word 'bot' is found
@@ -92,21 +95,22 @@ public class CryptoBot extends TelegramLongPollingBot {
 				LOG.trace("Incoming chat message matches {}.", patternBot);
 												
 				// rename the command
-				String command = "getBotOptions";
+				//String command = "getBotOptions";
 				
-				BotRequest chatRequest = new BotRequest();
-				chatRequest.registerChatMessage(chatID, firstName, command);
-
-				SendMessage message = chatRequest.getBotOptions();
+				// register this request
+				commandHandler.registerRequestInDatabase();
 				
-				LOG.trace("message to send: {}.", message);
+				// now send the bot options
+				commandHandler.sendBotOptions();
 				
-				try {
-					sendMessage(message); // Sending our message object to user
-				} catch (TelegramApiException e) {
-					//e.printStackTrace();
-					LOG.fatal("error sending chat message {}", e);
-				}
+				//LOG.trace("message to send: {}.", message);
+				
+//				try {
+//					sendMessage(message); // Sending our message object to user
+//				} catch (TelegramApiException e) {
+//					//e.printStackTrace();
+//					LOG.fatal("error sending chat message {}", e);
+//				}
 
 			}
 			
@@ -117,10 +121,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 			if (matcher.find()) {
 				LOG.trace("Incoming chat message matches {}.", patternBot);
 				
-				// now let the BotRequest class deal with it
-				BotRequest chatRequest = new BotRequest();
-				chatRequest.registerChatMessage(chatID, firstName, incomingMessageText);
-				
+				//TODO: now let the BotRequest class deal with it
+
 				
 			}
 			
@@ -139,96 +141,24 @@ public class CryptoBot extends TelegramLongPollingBot {
 			// get the first name of the requester
 			String firstName = update.getCallbackQuery().getFrom().getFirstName();
 			
-			// create a new BotRequest object
-			BotRequest callbackRequest = new BotRequest();
+			// call the CommandHandler
+			CommandHandler commandHandler = new CommandHandler();
+						
 			// register this request
-			callbackRequest.registerCallbackQuery(chatID, messageID, firstName, callData);
+			commandHandler.registerCallbackQuery(chatID, messageID, firstName, callData);
 			
-			// use the runCallbackQueryCommand method to determine the message to send
-			EditMessageText message = callbackRequest.runCallbackQueryCommand();
+			// register this request
+			commandHandler.registerRequestInDatabase();
+			
+			// use the runCallbackQueryCommand to handle this request
+			commandHandler.runCallbackQueryCommand();
 
-			try {
-				editMessageText(message);
-			} catch (TelegramApiException e) {
-				// TODO Auto-generated catch block
-				//e.printStackTrace();
-				LOG.fatal("error editing chat message {}", e);
-			}
 		}
 		LOG.trace("finished onUpdateReceived()");
 	}
 	
 
 	
-	/**
-	 * Register the incoming chat message. This method checks if the chatID is already registerd.
-	 * If not, this method will register the chatID. 
-	 * By default the active and receive_update are set to 0. This means the chat isn't allowed to
-	 * send requests to the bot.
-	 * @param chatID the chatID from the group/user which send a request to the bot
-	 * @throws Exception mysql error
-	 */
-	public void registerChat(long chatID) throws Exception {
-		LOG.trace("entered registerChat(), chatID={}", chatID);
-		
-		// check if the chat is already registered
-		String query = "SELECT chat_id FROM chats WHERE chat_id = ?";
-		Object[] parameters = new Object[] {chatID};
-		MySQLAccess db = new MySQLAccess();
-		db.executeSelectQuery(query, parameters);
-		
-		ResultSet resultSet = db.getResultSet();
-		
-		if(resultSet.next() == false){
-			LOG.info("chatID {} is not registered yet", chatID);
-			
-			// the chat is not registered, register it
-			query = "INSERT INTO chats (chat_id) VALUES (?)";
-			parameters = new Object[] {chatID};
-			// run the query
-			db.executeUpdateQuery(query, parameters);
-		}
-		
-		db.close();
-		LOG.trace("finished registerChat()");
-	}
-	
-	/**
-	 * This method checks if the chat from where the request is send is allowed to send requests to the bot.
-	 * To check this, this method checks if the chat_id is in the database and if active is set to 1
-	 * @param chatID the id of the chat that needs checking
-	 * @return true if the chat is allowed, else false
-	 */
-	private boolean checkIfChatIsAllowedToSendRequests(long chatID) {
-		LOG.trace("entered checkIfChatIsAllowedToSendRequests(), chatID={}", chatID);
-		// now check if the chat is in the database and if it is allowed to place requests for this bot
-		String query = "SELECT * FROM chats WHERE chat_id = ? AND active = 1";
-		Object[] parameters = new Object[] {chatID};
-		MySQLAccess db = new MySQLAccess();
-		try {
-			db.executeSelectQuery(query, parameters);
-			
-			ResultSet resultSet = db.getResultSet();
-			// check if the resultset contains something
-			if(! resultSet.next()) {
-				// no results found, this means that the bot isn't allowed to send to this group
-				String messageText = String.format("Hoi! Wij kennen elkaar nog niet. Vraag even aan Anton (@Kolkos) of hij deze chat wil activeren. Vermeld dit chatID: %d", chatID);
-				this.sendStringToChat(chatID, messageText);
-				return false;
-			}
-		} catch (Exception e1) {
-			// TODO Auto-generated catch block
-			// error found, for safety reasons return false
-			//e1.printStackTrace();
-			db.close();
-			LOG.fatal("Error getting chats from database: {}", e1);
-			return false;
-		}finally {
-			db.close();
-		}
-		// if the code reaches this part, the chat is allowed to send messages
-		return true;
-	}
 	
 	/**
 	 * This method is called from the scheduler. This method automatically requests the current

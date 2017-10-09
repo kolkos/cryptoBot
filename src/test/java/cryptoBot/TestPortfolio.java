@@ -31,12 +31,14 @@ public class TestPortfolio {
 		portfolio.getCoinInPortfolio(coinName);
 		
 		System.out.println("Portfolio:");
-		System.out.println(String.format("Portfolio value: %.2f", portfolio.getTotalValuePortfolio()));
+		System.out.println(String.format("Portfolio value: %.2f", portfolio.getTotalCurrentValuePortfolio()));
+		System.out.println(String.format("Last portfolio value: %.2f", portfolio.getTotalPreviousValuePortfolio()));
 		
 		// now loop through the coins
 		for(Coin coin : portfolio.getCoins()) {
 			System.out.println(String.format("  Coin: %s", coin.getCoinName()));
-			System.out.println(String.format("  Total value: %.2f", coin.getTotalCoinValue()));
+			System.out.println(String.format("  Total value: %.2f", coin.getTotalCurrentCoinValue()));
+			System.out.println(String.format("  Last value: %.2f", coin.getTotalLastKnownCoinValue()));
 			System.out.println("  Wallets:");
 			// loop trough the wallets
 			for(Wallet wallet : coin.getWallets()) {
@@ -44,6 +46,7 @@ public class TestPortfolio {
 				System.out.println(String.format("    Address: %s", wallet.getWalletAddress()));
 				System.out.println(String.format("    Balance: %f", wallet.getBalanceCoin()));
 				System.out.println(String.format("    Value: %.2f", wallet.getCurrentValue()));
+				System.out.println(String.format("    Last value: %.2f", wallet.getLastKnownValue()));
 			}
 			
 		}
@@ -55,12 +58,14 @@ public class TestPortfolio {
 		portfolio.getAllCoinsInPortfolio();
 		
 		System.out.println("Portfolio:");
-		System.out.println(String.format("Portfolio value: %.2f", portfolio.getTotalValuePortfolio()));
+		System.out.println(String.format("Portfolio value: %.2f", portfolio.getTotalCurrentValuePortfolio()));
+		System.out.println(String.format("Last portfolio value: %.2f", portfolio.getTotalPreviousValuePortfolio()));
 		
 		// now loop through the coins
 		for(Coin coin : portfolio.getCoins()) {
 			System.out.println(String.format("  Coin: %s", coin.getCoinName()));
-			System.out.println(String.format("  Total value: %.2f", coin.getTotalCoinValue()));
+			System.out.println(String.format("  Total value: %.2f", coin.getTotalCurrentCoinValue()));
+			System.out.println(String.format("  Last value: %.2f", coin.getTotalLastKnownCoinValue()));
 			System.out.println("  Wallets:");
 			// loop trough the wallets
 			for(Wallet wallet : coin.getWallets()) {
@@ -68,6 +73,7 @@ public class TestPortfolio {
 				System.out.println(String.format("    Address: %s", wallet.getWalletAddress()));
 				System.out.println(String.format("    Balance: %f", wallet.getBalanceCoin()));
 				System.out.println(String.format("    Value: %.2f", wallet.getCurrentValue()));
+				System.out.println(String.format("    Last value: %.2f", wallet.getLastKnownValue()));
 			}
 			
 		}
