@@ -435,6 +435,10 @@ public class CommandHandler extends CryptoBot {
 			case "getWallets":
 				message = this.getWallets();
 				break;
+			case "getWalletsForCoin":
+				requiredKeys.add("coinName");
+				message = this.getWalletsForCoin(requiredKeys, callDataDetails);
+				break;
 			default:
 				// if the method is not declared (yet) generate a error message
 				message = this.generateSimpleEditMessageText("Ik kan (nog) niets met dit commando!");
@@ -491,7 +495,7 @@ public class CommandHandler extends CryptoBot {
 		
 		// create first line
 		List<InlineKeyboardButton> rowInline = new ArrayList<>();
-		rowInline.add(new InlineKeyboardButton().setText("Snel waarde portfolio opvragen")
+		rowInline.add(new InlineKeyboardButton().setText("Waarde opvragen")
 				.setCallbackData("method=getTotalPortfolioValue"));
 		rowsInline.add(rowInline);
 		
@@ -525,7 +529,7 @@ public class CommandHandler extends CryptoBot {
 	private EditMessageText getPortfolioCoins() {
 		LOG.trace("entered getPortfolioCoins()");
 		
-		String messageText = "Op het moment heb ik de volgende coins in het porfolio gevonden:";
+		String messageText = "Het portfolio bestaat uit de volgende coins. Maak een keuze.";
 		
 		EditMessageText message = new EditMessageText()
                 .setChatId(this.chatIDTelegram)
@@ -545,7 +549,7 @@ public class CommandHandler extends CryptoBot {
 		for(String coin : coins) {
 			
 			List<InlineKeyboardButton> rowInline = new ArrayList<>();
-			String commandString = String.format("method=getCoinValueOptions,coinName=%s", coin);
+			String commandString = String.format("method=getWalletsForCoin,coinName=%s", coin);
 			
 			rowInline.add(new InlineKeyboardButton().setText(coin.toUpperCase())
 					.setCallbackData(commandString));
@@ -556,7 +560,7 @@ public class CommandHandler extends CryptoBot {
 		// now add the 'all' option
 		
 		List<InlineKeyboardButton> rowInline = new ArrayList<>();
-		String commandString = String.format("method=getCoinValueOptions,coinName=%s", "all");
+		String commandString = String.format("method=getWalletsForCoin,coinName=%s", "all");
 		
 		rowInline.add(new InlineKeyboardButton().setText("Alles")
 				.setCallbackData(commandString));
@@ -570,10 +574,120 @@ public class CommandHandler extends CryptoBot {
 		return message;
 	}
 	
-	private void getWalletsForCoin(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
-		// TODO: methode schrijven waarmee de wallets for the coins worden opgehaald...
-		// bij alles moet de coin naam worden toegevoegd
+	/**
+	 * Method to get all the wallets for all the coins
+	 * @return list containing all the wallets
+	 */
+	private List<String> getAllWalletAddresses(){
+		List<String> walletList = new ArrayList<>();
+		
+		// get all the coins in the portfolio
+		Portfolio portfolio = new Portfolio();
+		portfolio.setCoinList();
+		List<String> coins = portfolio.getCoinList();
+		
+		// now loop the coins
+		for(String coinName : coins) {
+			// now get the wallets for this coin, 
+			Coin coin = new Coin();
+			List<String> walletAddresses = coin.getWalletAddresses(coinName);
+			// now loop through the found wallet addresses
+			for(String walletAddress : walletAddresses) {
+				String walletLine = String.format("%s,%s", walletAddress, coinName);
+				// add this line to the list
+				walletList.add(walletLine);
+			}
+		}
+		
+		return walletList;
+	}
 	
+	/**
+	 * This method generates a message containing the wallet addresses as buttons. 
+	 * @param requiredKeys keys required to successfully handle this request
+	 * @param callDataDetails the callback data
+	 * @return
+	 */
+	private EditMessageText getWalletsForCoin(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
+		LOG.trace("entered getWalletsForCoin()");
+		
+		// check if the call is complete
+		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
+			// command is not complete, exit the method with an error text
+			EditMessageText message = this.generateSimpleEditMessageText("Sorry het commando is niet compleet");
+			LOG.warn("Not all required keys are found for getCoinValueOptions(). Exiting");
+			return message;
+		}
+		
+		// first create the list
+		// this list will be used to form the buttons
+		List<String> walletList = new ArrayList<>();
+		
+		// if coin is all, get all wallets for all coins
+		if(callDataDetails.get("coinName").equals("all")) {
+			// get all the coins in the portfolio
+			walletList = this.getAllWalletAddresses();
+			
+		}else {
+			// a specific coin has been chosen, get the addresses for this coin
+			Coin coin = new Coin();
+			List<String> walletAddresses = coin.getWalletAddresses(callDataDetails.get("coinName"));
+			for(String walletAddress : walletAddresses) {
+				String walletLine = String.format("%s,%s", walletAddress, callDataDetails.get("coinName"));
+				// add this line to the list
+				walletList.add(walletLine);
+			}
+		}
+		
+		// now generate the message
+		String messageText = "Ik heb de volgende wallets gevonden. Maak een keuze";
+		
+		EditMessageText message = new EditMessageText()
+                .setChatId(this.chatIDTelegram)
+                .setMessageId(toIntExact(this.messageID))
+                .setText(messageText);
+		
+		InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+		List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+		
+		// loop through the wallets list
+		for(String walletAddressString : walletList) {
+			// split the walletAddress string
+			String walletAddress = walletAddressString.split(",")[0];
+			String coinName = walletAddressString.split(",")[1];
+			
+			Wallet wallet = new Wallet();
+			int walletID = wallet.getWalletIDFromDB(walletAddress);
+			
+			List<InlineKeyboardButton> rowInline = new ArrayList<>();
+			
+			String buttonText = String.format("%s (%s)", walletAddress, coinName.toUpperCase());
+			String commandString = String.format("method=getWalletValue,walletID=%d", walletID);
+			
+			LOG.info(buttonText);
+			LOG.info(commandString);
+			
+			rowInline.add(new InlineKeyboardButton().setText(buttonText)
+					.setCallbackData(commandString));
+			rowsInline.add(rowInline);
+		}
+		
+		// add the all option
+		List<InlineKeyboardButton> rowInline = new ArrayList<>();
+		String commandString = "method=getAllWalletsValues";
+		
+		rowInline.add(new InlineKeyboardButton().setText("Alles")
+				.setCallbackData(commandString));
+		rowsInline.add(rowInline);
+		
+		// Add it to the message
+		markupInline.setKeyboard(rowsInline);
+		message.setReplyMarkup(markupInline);
+		
+		LOG.trace("finished getWalletsForCoin()");
+		
+		return message;
+		
 	}
 	
 	/**
@@ -593,6 +707,26 @@ public class CommandHandler extends CryptoBot {
 		LOG.trace("finished getHelpTextEdit()");
 		
 		return message;
+	}
+	
+	private String generateOverallValueMessage() {
+		String valueMessage = "";
+		
+		/*
+		 * TODO: 
+		 * 	Per coin:
+		 * 		totale balans
+		 * 	Totaal:
+		 * 		totale waarde portfolio
+		 * 		+/- tov vorige keer opgevraagd
+		 * 		+/- percentage tov vorige keer opgevraagd
+		 * 		Datum vorige keer opgevraagd
+		 * 	Winst/verlies
+		 * 		
+		 * 
+		 */
+		
+		return valueMessage;
 	}
 	
 	/**

@@ -98,7 +98,7 @@ public class Coin {
 			Wallet wallet = new Wallet();
 
 			// now receive the values for this wallet
-			wallet.getWalletValue(this.coinName, walletAddress);
+			wallet.getWalletValue(walletAddress);
 			
 			// add the value of this wallet to the total value
 			this.totalCurrentCoinValue += wallet.getCurrentValue();

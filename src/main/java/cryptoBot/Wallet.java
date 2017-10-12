@@ -23,7 +23,6 @@ public class Wallet {
 	
 	private static final Logger LOG = LogManager.getLogger(Wallet.class);
 	
-
 	public int getRequestID() {
 		return requestID;
 	}
@@ -91,7 +90,66 @@ public class Wallet {
 	public double getCurrentValue() {
 		return this.currentValue;
 	}
+	
+	/**
+	 * Simple method to get the id of a wallet address from the database
+	 * @param walletAddress the address of the wallet
+	 * @return id of the wallet in the database
+	 */
+	public int getWalletIDFromDB(String walletAddress) {
+		// first set the walletID to 0
+		LOG.trace("Entering getWalletIDFromDB()");
+		int walletID = 0;
 		
+		String query = "SELECT id FROM wallets WHERE address = ?";
+		Object[] parameters = new Object[] {walletAddress};
+		MySQLAccess db = new MySQLAccess();
+		
+		try {
+			db.executeSelectQuery(query, parameters);
+			ResultSet resultSet = db.getResultSet();
+			while (resultSet.next()) {
+				walletID = resultSet.getInt("id");
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			db.close();
+		}
+		
+		LOG.trace("Finished getWalletIDFromDB()");
+		return walletID;
+	}
+	
+	/**
+	 * Get the name of the coin for the selected wallet.
+	 * This method sets the attribute
+	 */
+	public void getCoinNameForWallet() {
+		LOG.trace("Entering getCoinNameForWallet()");
+		String query = "SELECT coins.name AS coinName " + 
+				"FROM coins, wallets " + 
+				"WHERE wallets.coin_id = coins.id " + 
+				"AND wallets.address = ? "
+				+ "LIMIT 1";
+		Object[] parameters = new Object[] {this.walletAddress};
+		MySQLAccess db = new MySQLAccess();
+		
+		try {
+			db.executeSelectQuery(query, parameters);
+			ResultSet resultSet = db.getResultSet();
+			while (resultSet.next()) {
+				this.coinName = resultSet.getString("coinName");
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			db.close();
+		}
+		LOG.trace("Finished getCoinNameForWallet()");
+	}
 	
 	/**
 	 * This method gets the current value for the selected wallet. It uses the api request to get the values
@@ -99,13 +157,12 @@ public class Wallet {
 	 * @param coinName the name of the coin
 	 * @param walletAddress the address of the wallet 
 	 */
-	public void getWalletValue(String coinName, String walletAddress) {
+	public void getWalletValue(String walletAddress) {
 		LOG.trace("Entering getWalletValue()");
 		
 		// register the attributes
-		this.setCoinName(coinName);
 		this.setWalletAddress(walletAddress);
-		
+		this.getCoinNameForWallet();
 
 		try {
 			// try to run the json request
