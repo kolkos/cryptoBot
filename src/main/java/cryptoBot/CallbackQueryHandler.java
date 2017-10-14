@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.telegram.telegrambots.api.methods.ParseMode;
 import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -159,6 +160,9 @@ public class CallbackQueryHandler extends CommandHandler {
 		if(! callDataDetails.containsKey("method")) {
 			message = this.generateSimpleEditMessageText("Method niet gevonden in callback query");
 			LOG.warn("method not found in callback data!");
+			
+			message = this.generateSimpleEditMessageText("Het commando van deze knop is helaas niet compleet. Kun jij niets aan doen, maar ik kan er nu dus niets mee. #sad");
+			this.sendEditMessageText(message);
 			// exit the method
 			return;
 		}
@@ -178,17 +182,12 @@ public class CallbackQueryHandler extends CommandHandler {
 			case "getHelpText":
 				message = this.getHelpTextEdit();
 				break;
-			case "getCoinValue":
-				requiredKeys.add("coinName");
-				requiredKeys.add("since");
-				message = this.getCoinValue(requiredKeys, callDataDetails);
-				break;
-			case "getWallets":
-				message = this.getWallets();
-				break;
 			case "getWalletsForCoin":
 				requiredKeys.add("coinName");
 				message = this.getWalletsForCoin(requiredKeys, callDataDetails);
+				break;
+			case "getTotalPortfolioValue":
+				message = this.getTotalPortfolioValue();
 				break;
 			default:
 				// if the method is not declared (yet) generate a error message
@@ -304,8 +303,8 @@ public class CallbackQueryHandler extends CommandHandler {
 		// check if the call is complete
 		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
 			// command is not complete, exit the method with an error text
-			EditMessageText message = this.generateSimpleEditMessageText("Sorry het commando is niet compleet");
-			LOG.warn("Not all required keys are found for getCoinValueOptions(). Exiting");
+			EditMessageText message = this.generateSimpleEditMessageText("Sorry het commando van deze knop is niet compleet. #sorrynog");
+			LOG.warn("Not all required keys are found for getWalletsForCoin(). Exiting");
 			return message;
 		}
 		
@@ -380,68 +379,7 @@ public class CallbackQueryHandler extends CommandHandler {
 		
 	}
 	
-	/**
-	 * This method get the values by the coins. This method is called after the following methods:
-	 *   - getPortfolioCoins => get the coins in the portfolio
-	 *   - getCoinValueOptions => get the options for the coin request (since)
-	 * This method uses the checkCallDataComplete() method to check if the call is complete. If not, a error message is returned
-	 * @param requiredKeys the keys which are need to be set to correctly handle this request
-	 * @param callDataDetails the HashMap containing the parameters for this request
-	 * @return a status message (depending on the chosen options) with the current value of the portfolio (by coin)
-	 */
-	private EditMessageText getCoinValue(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
-		LOG.trace("entered getCoinValue()");
 		
-		// check if the call is complete
-		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
-			EditMessageText message = this.generateSimpleEditMessageText("Commando niet compleet");
-			LOG.warn("Not all required keys are found for getCoinValue()");
-			return message;
-		}
-		
-		// create a request
-		Request request = new Request();
-		request.setRequestedBy(this.getFirstName());
-		request.setRequestedCoins(callDataDetails.get("coinName"));
-		request.setCalculateSince(callDataDetails.get("since"));
-		request.handleCoinRequest();
-		
-		String statusMessage = request.getStatusMessage();
-		
-		EditMessageText message = new EditMessageText()
-                .setChatId(this.getChatIDTelegram())
-                .setMessageId(toIntExact(this.messageID))
-                .setText(statusMessage);
-		
-		LOG.trace("finished getCoinValue()");
-		
-		return message;
-	}
-	
-	/**
-	 * Create a status message containing all the registered wallets (with the current values)
-	 * @return status message which contains the current values of the registered wallets
-	 */
-	private EditMessageText getWallets() {
-		LOG.trace("entered getWallets()");
-		
-		Request request = new Request();
-		request.setRequestedBy(this.getFirstName());
-		
-		request.handleWalletRequest();
-		
-		String statusMessage = request.getStatusMessage();
-		
-		EditMessageText message = new EditMessageText()
-                .setChatId(this.getChatIDTelegram())
-                .setMessageId(toIntExact(this.messageID))
-                .setText(statusMessage);
-		
-		LOG.trace("finished getWallets()");
-		
-		return message;
-		
-	}
 	
 	/**
 	 * Transforms the help text into a EditMessage. This method is called when the help button is pressed
@@ -458,6 +396,48 @@ public class CallbackQueryHandler extends CommandHandler {
                 .setText(messageText);
 		
 		LOG.trace("finished getHelpTextEdit()");
+		
+		return message;
+	}
+	
+	private EditMessageText getTotalPortfolioValue() {
+		LOG.trace("entered getTotalPortfolioValue()");
+		
+		// get all the coins in the portfolio
+		Portfolio portfolio = new Portfolio();
+		portfolio.getAllCoinsInPortfolio();
+		
+		List<Coin> coins = portfolio.getCoins();
+		
+		String messageText;
+		messageText = "Hierbij de totale waarde van het portfolio.\n\n";
+		
+		// loop through the coins
+		for(Coin coin : coins) {
+			// get the coin name
+			String coinName = coin.getCoinName();
+			double balance = coin.getTotalCoinBalance();
+			// add this to the message text
+			messageText += String.format("%s: `%.8f`\n", coinName, balance);
+		}
+		
+		// add the total value of the portfolio
+		messageText += String.format("\nTotale waarde: `%.2f`\n", portfolio.getTotalCurrentValuePortfolio());
+		
+		// calculate the difference to the last known value
+		double valueDifference = portfolio.getTotalCurrentValuePortfolio() - portfolio.getTotalPreviousValuePortfolio();
+		
+		
+		// add the last request
+		messageText += String.format("%.2f sinds \n", valueDifference);
+		
+		EditMessageText message = new EditMessageText()
+                .setChatId(this.getChatIDTelegram())
+                .setMessageId(toIntExact(this.messageID))
+                .setText(messageText);
+		
+		
+		message.setParseMode(ParseMode.MARKDOWN);
 		
 		return message;
 	}

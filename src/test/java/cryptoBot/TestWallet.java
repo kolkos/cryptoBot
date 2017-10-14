@@ -150,7 +150,7 @@ public class TestWallet {
 		LOG.info("Total deposited => {}", testWallet.getTotalDepositedValue());
 		
 		// now remove the test data again
-		this.deleteTestJunk();
+		//this.deleteTestJunk();
 	}
 	
 	

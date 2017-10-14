@@ -11,9 +11,18 @@ public class Portfolio {
 	private List<Coin> coins;
 	private double totalCurrentValuePortfolio = 0;
 	private double totalPreviousValuePortfolio = 0;
+	private double totalDepositedValue = 0;
 	
 	private static final Logger LOG = LogManager.getLogger(Portfolio.class);
 	
+	public double getTotalDepositedValue() {
+		return totalDepositedValue;
+	}
+
+	public void setTotalDepositedValue(double totalDepositedValue) {
+		this.totalDepositedValue = totalDepositedValue;
+	}
+
 	public List<Coin> getCoins() {
 		return this.coins;
 	}
@@ -111,6 +120,9 @@ public class Portfolio {
 			
 			// add the previous known value
 			this.totalPreviousValuePortfolio += coin.getTotalLastKnownCoinValue();
+			
+			// add the total deposited value
+			this.totalDepositedValue += coin.getTotalDepositedCoinValue();
 			
 			// add to the list
 			this.coins.add(coin);

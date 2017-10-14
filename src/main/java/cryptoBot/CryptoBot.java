@@ -87,44 +87,8 @@ public class CryptoBot extends TelegramLongPollingBot {
 			
 			LOG.trace("Incoming chat message {}.", incomingMessageText);
 			
-			// first check if the message contains the word 'bot'
-			Pattern patternBot = Pattern.compile("^(.*?)(\\bbot\\b)(.*)$");
-			Matcher matcher = patternBot.matcher(incomingMessageText);
-			// only do something when the word 'bot' is found
-			if (matcher.find()) {
-				LOG.trace("Incoming chat message matches {}.", patternBot);
-												
-				// rename the command
-				//String command = "getBotOptions";
-				
-				// register this request
-				textMessageHandler.registerRequestInDatabase();
-				
-				// now send the bot options
-				textMessageHandler.sendBotOptions();
-				
-				//LOG.trace("message to send: {}.", message);
-				
-//				try {
-//					sendMessage(message); // Sending our message object to user
-//				} catch (TelegramApiException e) {
-//					//e.printStackTrace();
-//					LOG.fatal("error sending chat message {}", e);
-//				}
-
-			}
-			
-			// handle other commands
-			// these commands start with /
-			patternBot = Pattern.compile("^/.*$");
-			matcher = patternBot.matcher(incomingMessageText);
-			if (matcher.find()) {
-				LOG.trace("Incoming chat message matches {}.", patternBot);
-				
-				//TODO: now let the BotRequest class deal with it
-
-				
-			}
+			// now use the TextMessageHandler
+			textMessageHandler.runTextMessageCommand();
 			
 		// handle incoming callback queries
 		} else if (update.hasCallbackQuery()) {
@@ -142,118 +106,22 @@ public class CryptoBot extends TelegramLongPollingBot {
 			String firstName = update.getCallbackQuery().getFrom().getFirstName();
 			
 			// call the CommandHandler
-			CommandHandler commandHandler = new CommandHandler();
+			CallbackQueryHandler callbackQueryHandler = new CallbackQueryHandler();
 						
 			// register this request
-			commandHandler.registerCallbackQuery(chatID, messageID, firstName, callData);
+			callbackQueryHandler.registerCallbackQuery(chatID, messageID, firstName, callData);
 			
 			// register this request
-			commandHandler.registerRequestInDatabase();
+			callbackQueryHandler.registerRequestInDatabase();
 			
 			// use the runCallbackQueryCommand to handle this request
-			commandHandler.runCallbackQueryCommand();
+			callbackQueryHandler.runCallbackQueryCommand();
 
 		}
 		LOG.trace("finished onUpdateReceived()");
 	}
 	
 
-	
-	
-	/**
-	 * This method is called from the scheduler. This method automatically requests the current
-	 * value of the portfolio. 
-	 * If the current time is between FROM_HOUR and TO_HOUR this method will send a update message
-	 * to the registered chats. The method checks if active and receive_update are set to 1
-	 */
-	public void automaticStatusUpdatePortfolio() {
-		LOG.trace("entered automaticStatusUpdatePortfolio()");
-		
-		Request request = new Request();
-		request.setRequestedCoins("all");
-		request.setRequestedBy("cryptoBot");
-		request.handleCoinRequest();
-				
-		// now check if the message needs to be send
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(new Date());
-		int hour = cal.get(Calendar.HOUR_OF_DAY);  //Get the hour from the calendar
-		
-		LOG.info("Run automatic task automaticStatusUpdatePortfolio() @ {}", cal.getTime());
-		
-		// Check if hour is between 12 and 13
-		// if so send the message
-		if(hour >= CryptoBot.FROM_HOUR && hour < CryptoBot.TO_HOUR)               
-		{
-			// get the chats from the db to determine where to send the updates to
-			String query = "SELECT chat_id FROM chats WHERE active = ? AND receive_update = ?";
-			Object[] parameters = new Object[] {1, 1};
-			MySQLAccess db = new MySQLAccess();
-			try {
-				db.executeSelectQuery(query, parameters);
-				// get the results
-				ResultSet resultSet = db.getResultSet();
-				
-				String statusMessageAppendix = String.format("Hallo lieve kijkbuiskindertjes! De update van ongeveer %d uur is hier!\n\n", hour);
-				request.appendToStatusMessage(statusMessageAppendix);
-				
-				while (resultSet.next()) {
-					long chatID = resultSet.getLong("chat_id");
-					LOG.info("Sending a automatic generated message to {}", chatID);
-					
-					SendMessage message = new SendMessage() // Create a message object object
-							.setChatId(chatID).setText(request.getStatusMessage());
-					try {
-						sendMessage(message); // Sending our message object to user
-					} catch (TelegramApiException e) {
-						//System.out.println("Bot 3niet toegevoegd aan chat: " + chatID);
-						LOG.warn("Error sending message to (probably not in group) {}", e);
-					}
-				}
-			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				//e1.printStackTrace();
-				LOG.fatal("Error getting details from database: {}", e1);
-			}finally {
-				db.close();
-			}
-		}
-		LOG.trace("finished automaticStatusUpdatePortfolio()");
-	}
-	
-//	/**
-//	 * Super simple method to send a chat message to an ID. 
-//	 * @param chatID the id of the chat where to send the message to
-//	 * @param messageText the message to send
-//	 */
-//	public void sendStringToChat(long chatID, String messageText) {
-//		LOG.trace("entered sendStringToChat(), chatID={}, messageText={}", chatID, messageText);
-//		
-//		SendMessage message = new SendMessage() // Create a message object object
-//				.setChatId(chatID).setText(messageText);
-//		try {
-//			sendMessage(message); // Sending our message object to user
-//		} catch (TelegramApiException e) {
-//			// TODO: iets met fout doen
-//			//e.printStackTrace();
-//			LOG.fatal("Error sending message: {}", e);
-//		}
-//		LOG.trace("finished sendStringToChat()");
-//	}
-//	
-//	public void sendPreparedMessageToChat(long chatID, SendMessage message) {
-//		LOG.trace("entered sendPreparedMessageToChat(), chatID={}, messageText={}", chatID, message);
-//
-//		try {
-//			sendMessage(message); // Sending our message object to user
-//		} catch (TelegramApiException e) {
-//			// TODO: iets met fout doen
-//			//e.printStackTrace();
-//			LOG.fatal("Error sending message: {}", e);
-//		}
-//		LOG.trace("finished sendPreparedMessageToChat()");
-//	}
-	
 	
 	@Override
 	public String getBotUsername() {

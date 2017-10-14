@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.telegram.telegrambots.api.methods.ParseMode;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -300,7 +301,7 @@ public class CommandHandler extends CryptoBot {
 	public void sendBotOptions() {
 		LOG.trace("entered sendBotOptions()");
 		
-		String messageText = "Maak een keuze uit 1 van de volgende opties:";
+		String messageText = "Maak een uit 1 van de volgende opties:";
 		
 		SendMessage message = new SendMessage() // Create a message object object
 				.setChatId(this.chatIDTelegram).setText(messageText);

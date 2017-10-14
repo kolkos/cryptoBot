@@ -126,7 +126,7 @@ public class Deposit {
 		
 		// parse the deposited amount
 		String amountString = success ? matcher.group("amount") : null;
-		if(amountString.equals(null)) {
+		if(amountString == null) {
 			// error, no valid value found
 			// exit method
 			LOG.error("Unable to parse deposit amount");
@@ -191,8 +191,10 @@ public class Deposit {
 	private void registerDeposit() {
 		LOG.trace("Entered registerDeposit()");
 		
+		java.sql.Date sqlDate = new java.sql.Date(this.depositDate.getTime());
+		
 		String query = "INSERT INTO deposits (uuid, deposit_date, wallet_id, coin_amount, purchase_value, remarks) VALUES (?, ?, ?, ?, ?, ?)";
-		Object[] parameters = new Object[] {this.uuid, this.depositDate, this.walletID, this.amount, this.purchaseValue, this.remarks};
+		Object[] parameters = new Object[] {this.uuid, sqlDate, this.walletID, this.amount, this.purchaseValue, this.remarks};
 		
 		MySQLAccess db = new MySQLAccess();
 		try {
@@ -249,8 +251,8 @@ public class Deposit {
 		String messageText = "Ik heb het volgende uit jouw commando gehaald:\n";
 		messageText += String.format("Datum: %s\n", this.depositDate);
 		messageText += String.format("Wallet: %s\n", this.walletAddress);
-		messageText += String.format("Aantal: %d\n", this.amount);
-		messageText += String.format("Aanschafwaarde: %d\n\n", this.purchaseValue);
+		messageText += String.format("Aantal: %.8f\n", this.amount);
+		messageText += String.format("Aanschafwaarde: %.2f\n\n", this.purchaseValue);
 		messageText += "Klopt dit?";
 		
 		// generate the message
@@ -258,7 +260,7 @@ public class Deposit {
 				.setChatId(this.chatID).setText(messageText);
 		
 		
-		String commandStringPattern = "?method=confirmDeposit,confirm=%d,depositID=%d";
+		String commandStringPattern = "method=confirmDeposit,confirm=%d,depositID=%d";
 		
 		
 		// now add a keyboard
