@@ -61,21 +61,21 @@ public class CryptoBot extends TelegramLongPollingBot {
 			String firstName = update.getMessage().getFrom().getFirstName();
 			
 			// call the CommandHandler
-			CommandHandler commandHandler = new CommandHandler();
+			TextMessageHandler textMessageHandler = new TextMessageHandler();
 			
 			// now register this incoming message
-			commandHandler.registerChatMessage(chatID, firstName, incomingMessageText);
+			textMessageHandler.registerChatMessage(chatID, firstName, incomingMessageText);
 			
 			// first register this chat (if necessary)
 			try {
-				commandHandler.registerChat();
+				textMessageHandler.registerChat();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				LOG.fatal("error registering the chatID {}", e);
 			}
 			
 			// check if the chat is allowed to send requests
-			if(! commandHandler.checkIfChatIsAllowedToSendRequests()) {
+			if(! textMessageHandler.checkIfChatIsAllowedToSendRequests()) {
 				// now allowed, exit method
 				LOG.info("Chat isn't authorized (yet).");
 				return;
@@ -98,10 +98,10 @@ public class CryptoBot extends TelegramLongPollingBot {
 				//String command = "getBotOptions";
 				
 				// register this request
-				commandHandler.registerRequestInDatabase();
+				textMessageHandler.registerRequestInDatabase();
 				
 				// now send the bot options
-				commandHandler.sendBotOptions();
+				textMessageHandler.sendBotOptions();
 				
 				//LOG.trace("message to send: {}.", message);
 				

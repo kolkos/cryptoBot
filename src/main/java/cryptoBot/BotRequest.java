@@ -45,7 +45,7 @@ public class BotRequest {
 			case "/deposit":
 				// deposit command found
 				// The Deposit class will handle this request
-				Deposit deposit = new Deposit();
+				DepositJunk deposit = new DepositJunk();
 				deposit.registerDeposit(chatID, firstName, this.command);
 				break;
 			default:

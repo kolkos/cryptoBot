@@ -15,7 +15,7 @@ public class TestDeposit {
 	public void testParsingDeposit() {
 		String sampleTelegramChatMessage = "/deposit 04-10-2017 45,00 Bitstamp Opmerking hier";
 		
-		Deposit testDeposit = new Deposit();
+		DepositJunk testDeposit = new DepositJunk();
 		
 		// set the message
 		testDeposit.setTelegramChatMessage(sampleTelegramChatMessage);
@@ -54,7 +54,7 @@ public class TestDeposit {
 		String firstName = "JUnit";
 		String sampleTelegramChatMessage = "/deposit 04-10-2017 45,00 Bitstamp Opmerking hier";
 		
-		Deposit testDeposit = new Deposit();
+		DepositJunk testDeposit = new DepositJunk();
 		testDeposit.registerDeposit(chatID, firstName, sampleTelegramChatMessage);
 		
 	}

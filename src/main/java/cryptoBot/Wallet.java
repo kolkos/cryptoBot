@@ -21,8 +21,14 @@ public class Wallet {
 	private int balanceSatoshi;
 	private int requestID = 0;
 	
+	private double totalDepositedValue;
+	
 	private static final Logger LOG = LogManager.getLogger(Wallet.class);
 	
+	public double getTotalDepositedValue() {
+		return totalDepositedValue;
+	}
+
 	public int getRequestID() {
 		return requestID;
 	}
@@ -184,7 +190,10 @@ public class Wallet {
 			this.lastKnownValue = this.getPreviousKnownWalletValue();
 
 			// get the ID of this wallet
-			this.walletID = this.getWalletIDFromDB();
+			this.walletID = this.getWalletIDFromDB(walletAddress);
+			
+			// now get the total deposited value
+			this.totalDepositedValue = this.getTotalDepositedValueFromDB();
 			
 			// register this result
 			this.registerCurrentResult();
@@ -271,53 +280,19 @@ public class Wallet {
 	}
 	
 	
-	/**
-	 * This method gets the ID of the wallet from the database to be able to use this ID to register the result
-	 * @return the ID of the wallet
-	 */
-	private int getWalletIDFromDB() {
-		LOG.trace("Entering getWalletID()");
-		
-		int walletID = 0;
-		
-		String query = "SELECT id FROM wallets WHERE address = ?";
-		Object[] parameters = new Object[] {this.walletAddress};
-		
-		MySQLAccess db = new MySQLAccess();
-		try {
-			db.executeSelectQuery(query, parameters);
-			
-			ResultSet resultSet = db.getResultSet();
 
-			// now register the received values
-			while (resultSet.next()) {
-				walletID = resultSet.getInt("id");
-			}
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			LOG.fatal("Error getting the wallet ID from the database: {}", e);
-		}finally {
-			db.close();
-		}
-		
-		LOG.trace("Finished getWalletID()");
-		return walletID;
-	}
-	
 	/**
 	 * Register the current result
 	 */
-	public void registerCurrentResult() {
+	private void registerCurrentResult() {
 		LOG.trace("Entering registerCurrentResult()");
 		
-		int walletID = this.getWalletID();
+		
 		if(walletID != 0) {
 			String query = "INSERT INTO results "+
 		                   "(request_id, wallet_id, balance_satoshi, balance_coin, current_value, currency) " +
 		                   "VALUES (?, ?, ?, ?, ?, ?)";
-			Object[] parameters = new Object[] {this.requestID, walletID, this.balanceSatoshi, this.balanceCoin, this.currentValue, this.currency};
+			Object[] parameters = new Object[] {this.requestID, this.walletID, this.balanceSatoshi, this.balanceCoin, this.currentValue, this.currency};
 			
 			MySQLAccess db = new MySQLAccess();
 			try {
@@ -334,5 +309,54 @@ public class Wallet {
 		}
 		LOG.trace("Finished registerCurrentResult()");
 	}
+	
+	/**
+	 * This method gets the total deposited value from the database
+	 * @return the total deposited value
+	 */
+	private double getTotalDepositedValueFromDB() {
+		LOG.trace("Entering getTotalDepositedValue()");
+		
+		String query = "SELECT SUM(purchase_value) AS purchaseValue FROM deposits WHERE wallet_id = ?";
+		Object[] parameters = new Object[] {this.walletID};
+		MySQLAccess db = new MySQLAccess();
+		
+		double totalDepositedValue = 0;
+		
+		try {
+			db.executeSelectQuery(query, parameters);
+			
+			ResultSet resultSet = db.getResultSet();
+
+			// now register the received values
+			while (resultSet.next()) {
+				totalDepositedValue = resultSet.getDouble("purchaseValue");
+			}
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			LOG.fatal("Error getting the wallet ID from the database: {}", e);
+		}finally {
+			db.close();
+		}
+		
+		LOG.trace("Finished getTotalDepositedValue()");
+		LOG.info("----> {}", totalDepositedValue);
+		
+		return totalDepositedValue;
+		
+	}
+	
+	public void processDepositCommand(String depositCommand) {
+		LOG.trace("entering processDepositCommand(), depositCommand={}", depositCommand);
+		
+		
+		
+		
+		LOG.trace("finished processDepositCommand()");
+	}
+	
+	
 	
 }
