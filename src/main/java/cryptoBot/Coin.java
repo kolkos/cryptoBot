@@ -15,8 +15,18 @@ public class Coin {
 	private double totalLastKnownCoinValue = 0;
 	private double totalDepositedCoinValue = 0;
 	
+	private int requestID = 0;
+	
 	private static final Logger LOG = LogManager.getLogger(Coin.class);
 	
+	public int getRequestID() {
+		return requestID;
+	}
+
+	public void setRequestID(int requestID) {
+		this.requestID = requestID;
+	}
+
 	public double getTotalCoinBalance() {
 		return this.totalCoinBalance;
 	}
@@ -114,6 +124,7 @@ public class Coin {
 		// loop through the addresses
 		for(String walletAddress : this.walletAddresses) {
 			Wallet wallet = new Wallet();
+			wallet.setRequestID(this.requestID);
 
 			// now receive the values for this wallet
 			wallet.getWalletValue(walletAddress);

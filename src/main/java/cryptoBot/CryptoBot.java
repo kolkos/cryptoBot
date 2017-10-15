@@ -63,6 +63,12 @@ public class CryptoBot extends TelegramLongPollingBot {
 			// call the CommandHandler
 			TextMessageHandler textMessageHandler = new TextMessageHandler();
 			
+			// make the message lower case
+			incomingMessageText = incomingMessageText.toLowerCase();
+			//System.out.println(incomingMessageText);
+			
+			LOG.trace("Incoming chat message {}.", incomingMessageText);
+			
 			// now register this incoming message
 			textMessageHandler.registerChatMessage(chatID, firstName, incomingMessageText);
 			
@@ -80,12 +86,6 @@ public class CryptoBot extends TelegramLongPollingBot {
 				LOG.info("Chat isn't authorized (yet).");
 				return;
 			}
-			
-			// make the message lowercase
-			incomingMessageText = incomingMessageText.toLowerCase();
-			//System.out.println(incomingMessageText);
-			
-			LOG.trace("Incoming chat message {}.", incomingMessageText);
 			
 			// now use the TextMessageHandler
 			textMessageHandler.runTextMessageCommand();

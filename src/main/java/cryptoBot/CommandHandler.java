@@ -1,18 +1,13 @@
 package cryptoBot;
 
-import static java.lang.Math.toIntExact;
-
 import java.sql.ResultSet;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.telegram.telegrambots.api.methods.ParseMode;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
-import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
@@ -23,9 +18,17 @@ public class CommandHandler extends CryptoBot {
 	private String incomingMessage;
 	private String uuid;
 	private int chatID;
+	private int requestID;
 		
 	private static final Logger LOG = LogManager.getLogger(CommandHandler.class);
 	
+	public int getRequestID() {
+		this.requestID = this.getRequestIDFromDB();
+		return this.requestID;
+	}
+
+	
+
 	public CommandHandler() {
 		this.setUuid();
 	}
@@ -217,6 +220,33 @@ public class CommandHandler extends CryptoBot {
 			db.close();
 		}
 		LOG.trace("finished registerRequestInDatabase()");
+	}
+	
+	private int getRequestIDFromDB() {
+		LOG.trace("entered getRequestIDFromDB()");
+		
+		String query = "SELECT id AS requestID FROM requests WHERE uuid = ? ORDER BY id DESC LIMIT 1";
+		Object[] parameters = new Object[] {this.uuid};
+		MySQLAccess db = new MySQLAccess();
+		int requestID = 0;
+		
+		try {
+			db.executeSelectQuery(query, parameters);
+			
+			ResultSet resultSet = db.getResultSet();
+			while(resultSet.next()) {
+				requestID = resultSet.getInt("requestID");
+			}
+			
+			
+		} catch (Exception e) {
+			LOG.fatal("Error getting chat ID from database: {}", e);
+		} finally {
+			db.close();
+		}
+		
+		LOG.trace("finished getRequestIDFromDB()");
+		return requestID;
 	}
 	
 	/**

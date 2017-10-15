@@ -1,6 +1,6 @@
 package cryptoBot;
 
-import java.net.URL;
+import java.sql.Timestamp;
 import java.sql.ResultSet;
 import java.util.*;
 
@@ -16,15 +16,20 @@ public class Wallet {
 	private double balanceCoin;
 	private double currentValue;
 	private double lastKnownValue;
+	private double totalDepositedValue;
+	
+	private Timestamp lastResultDate;
 	
 	private int walletID;
 	private int balanceSatoshi;
 	private int requestID = 0;
 	
-	private double totalDepositedValue;
-	
 	private static final Logger LOG = LogManager.getLogger(Wallet.class);
 	
+	public Timestamp getLastResultDate() {
+		return lastResultDate;
+	}
+
 	public double getTotalDepositedValue() {
 		return totalDepositedValue;
 	}
@@ -189,6 +194,9 @@ public class Wallet {
 			// get the last known value
 			this.lastKnownValue = this.getPreviousKnownWalletValue();
 
+			// get the last result date
+			this.lastResultDate = this.getLastResultDateFromDB();
+			
 			// get the ID of this wallet
 			this.walletID = this.getWalletIDFromDB(walletAddress);
 			
@@ -238,8 +246,6 @@ public class Wallet {
 			LOG.info("API request OK.");
 			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
 			LOG.fatal("API request ERROR: {}", e);
 		}
 		LOG.trace("Finished calculateCurrentValue()");
@@ -247,18 +253,13 @@ public class Wallet {
 	}
 	
 	private double getPreviousKnownWalletValue() {
-		String query = "SELECT" + 
-				" results.balance_satoshi as balanceSatoshi," + 
-				" results.balance_coin as balanceCoin," + 
-				" results.current_value as currentValue," + 
-				" results.currency as currency," + 
-				" coins.name as coinName" + 
-				" FROM results, coins, wallets" + 
-				" WHERE results.wallet_id = wallets.id" + 
-				" AND coins.id = wallets.coin_id" + 
-				" AND wallets.address = ?" +
-				" ORDER BY results.timestamp DESC" +
-				" LIMIT 1";
+		LOG.trace("Entering getPreviousKnownWalletValue()");
+		String query = "SELECT results.current_value AS currentValue " + 
+				"FROM results, wallets " + 
+				"WHERE results.wallet_id = wallets.id " + 
+				"AND wallets.address = ? " + 
+				"ORDER BY results.timestamp DESC " + 
+				"LIMIT 1";
 		Object[] parameters = new Object[] {this.walletAddress};
 		
 		MySQLAccess db = new MySQLAccess();
@@ -276,10 +277,38 @@ public class Wallet {
 		} finally {
 			db.close();
 		}
+		LOG.trace("Finished getPreviousKnownWalletValue()");
 		return lastKnownValue;
 	}
 	
-	
+	public Timestamp getLastResultDateFromDB() {
+		String query = "SELECT results.timestamp AS lastResultDate " + 
+				"FROM results, wallets " + 
+				"WHERE results.wallet_id = wallets.id " + 
+				"AND wallets.address = ? " + 
+				"ORDER BY results.timestamp DESC " + 
+				"LIMIT 1";
+		Object[] parameters = new Object[] {this.walletAddress};
+		MySQLAccess db = new MySQLAccess();
+		
+		// by default the date is today
+		Timestamp lastResultDate = new Timestamp(System.currentTimeMillis());
+		
+		try {
+			db.executeSelectQuery(query, parameters);
+			ResultSet resultSet = db.getResultSet();
+			while (resultSet.next()) {
+				lastResultDate = resultSet.getTimestamp("lastResultDate");
+			}
+		} catch (Exception e) {
+			LOG.fatal("Error getting coin values from database", e);
+		} finally {
+			db.close();
+		}
+		
+		// return the attribute
+		return lastResultDate;
+	}
 
 	/**
 	 * Register the current result
@@ -317,7 +346,7 @@ public class Wallet {
 	private double getTotalDepositedValueFromDB() {
 		LOG.trace("Entering getTotalDepositedValue()");
 		
-		String query = "SELECT SUM(purchase_value) AS purchaseValue FROM deposits WHERE wallet_id = ?";
+		String query = "SELECT SUM(purchase_value) AS purchaseValue FROM deposits WHERE wallet_id = ? AND confirmed = 1";
 		Object[] parameters = new Object[] {this.walletID};
 		MySQLAccess db = new MySQLAccess();
 		

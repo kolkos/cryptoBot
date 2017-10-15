@@ -23,7 +23,7 @@ public class TestWallet {
 	
 	private static final Logger LOG = LogManager.getLogger(TestWallet.class);
 	
-	public void prepareDatabaseWithTestData() {
+	public void createSemiFakeWallet() {
 		this.expectedTotalDepositedCoin = 0;
 		this.expectedTotalCoinValue = 0;
 		
@@ -49,13 +49,15 @@ public class TestWallet {
 			db.close();
 		}
 		
-		// now get the wallet ID for this wallet
-		Wallet wallet = new Wallet();
-		this.walletID = wallet.getWalletIDFromDB(walletAddress);
+	}
+	
+	
+	
+	public void runRandomDepositCommands() {
+		long chatID = -236099150;
+		String walletAddress = "38Ee9XUoHp6usVRDKNTdUvS1EUsca3Sb6L";
 		
-		// now insert to deposits with random values to the database
-		
-		for(int i=0; i<2; i++) {
+		for(int i=0; i<5; i++) {
 			Random r = new Random();
 			
 			// first generate a random coin amount
@@ -72,58 +74,94 @@ public class TestWallet {
 			// add it to the total
 			this.expectedTotalCoinValue += randomDepositValue;
 			
-			// register this values to the database
-			DateFormat format = new SimpleDateFormat("dd-MM-yyyy", new Locale("nl_NL"));
-			Date date;
-			try {
-				date = format.parse("13-10-1017");
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				date = new Date();
-			}
+			// now generate the command
+			String commandString = String.format("/deposit 14-10-2017 %s %.8f %.2f JUnit test deposit", walletAddress, randomDepositCoinAmount, randomDepositValue);
 			
-			java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+			// run this command string
+			TextMessageHandler textMessageHandler = new TextMessageHandler();
+			// register a fake text message
+			textMessageHandler.registerChatMessage(chatID, "JUnit", commandString);
 			
-			query = "INSERT INTO deposits (deposit_date, wallet_id, coin_amount, purchase_value, remarks) VALUES (?, ?, ?, ?, ?)";
-			parameters = new Object[] {sqlDate, this.walletID, randomDepositCoinAmount, randomDepositValue, "JUnit test!"};
-			try {
-				db.executeUpdateQuery(query, parameters);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			// now run runTextMessageCommand
+			textMessageHandler.runTextMessageCommand();
+						
+		}
+		
+	}
+	
+	public void confirmFakeTransactions() {
+		String query = "UPDATE deposits SET confirmed = 1 WHERE wallet_id = ?";
+		Object[] parameters = new Object[] {this.walletID};
+		MySQLAccess db = new MySQLAccess();
+		
+		try {
+			db.executeUpdateQuery(query, parameters);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
-	public void deleteTestJunk() {
-		List<String> queries = new ArrayList<>();
-		queries.add("DELETE FROM wallets WHERE id = ?");
-		queries.add("DELETE FROM deposits WHERE wallet_id = ?");
-		queries.add("DELETE FROM results WHERE wallet_id = ?");
-		Object[] parameters = new Object[] {this.walletID};
-		
+	public void cleanUpTestData() {
 		MySQLAccess db = new MySQLAccess();
 		
-		// run the queries in a loop
-		for(String query : queries) {
-			// run the query
-			try {
-				db.executeUpdateQuery(query, parameters);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		// delete the deposits
+		String query = "DELETE FROM deposits WHERE wallet_id = ?";
+		Object[] parameters = new Object[] {this.walletID};
+		
+		try {
+			db.executeUpdateQuery(query, parameters);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// delete the requests
+		query = "DELETE FROM requests WHERE firstName = ?";
+		parameters = new Object[] {"JUnit"};
+		
+		try {
+			db.executeUpdateQuery(query, parameters);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// delete the results
+		query = "DELETE FROM results WHERE wallet_id = ?";
+		parameters = new Object[] {this.walletID};
+		
+		try {
+			db.executeUpdateQuery(query, parameters);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// delete the wallet
+		query = "DELETE FROM wallets WHERE id = ?";
+		parameters = new Object[] {this.walletID};
+		
+		try {
+			db.executeUpdateQuery(query, parameters);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
 	@Test
-	public void testWallet() throws Exception {
+	public void testWallet() {
+		// first generate a semi fake wallet
+		this.createSemiFakeWallet();
+		
 		Wallet testWallet = new Wallet();
 		String walletAddress = "38Ee9XUoHp6usVRDKNTdUvS1EUsca3Sb6L";
 		
-		// first prepare the database
-		this.prepareDatabaseWithTestData();
+		this.walletID = testWallet.getWalletIDFromDB(walletAddress);
+		
+		// now run some deposit commands
+		this.runRandomDepositCommands();
 		
 		// now run the get info method
 		testWallet.getWalletValue(walletAddress);
@@ -132,14 +170,12 @@ public class TestWallet {
 		// get the wallet address
 		assertEquals(walletAddress, testWallet.getWalletAddress());
 		
-		// get the walletID
-		assertEquals(this.walletID, testWallet.getWalletID());
-		
 		// get the coin name
 		assertEquals("btc", testWallet.getCoinName());
 				
 		// get the total deposited value
-		assertEquals(this.expectedTotalCoinValue, testWallet.getTotalDepositedValue(), 0.01);
+		// because transactions aren't confirmed, value is 0
+		assertEquals(0, testWallet.getTotalDepositedValue(), 0.01);
 		
 		// now dump all the other values
 		LOG.info("Coin name       => {}", testWallet.getCoinName());
@@ -149,8 +185,25 @@ public class TestWallet {
 		LOG.info("Last value      => {}", testWallet.getLastKnownValue());
 		LOG.info("Total deposited => {}", testWallet.getTotalDepositedValue());
 		
-		// now remove the test data again
-		//this.deleteTestJunk();
+		// now confirm the fake transactions
+		this.confirmFakeTransactions();
+		
+		// run the getWalletValue method again
+		testWallet.getWalletValue(walletAddress);
+		
+		assertEquals(this.expectedTotalCoinValue, testWallet.getTotalDepositedValue(), 0.01);
+		
+		// now dump all the other values
+		LOG.info("Coin name       => {}", testWallet.getCoinName());
+		LOG.info("Wallet address  => {}", testWallet.getWalletAddress());
+		LOG.info("Balance satoshi => {}", testWallet.getBalanceSatoshi());
+		LOG.info("Balance         => {}", testWallet.getBalanceCoin());
+		LOG.info("Last value      => {}", testWallet.getLastKnownValue());
+		LOG.info("Last date       => {}", testWallet.getLastResultDate());
+		LOG.info("Total deposited => {}", testWallet.getTotalDepositedValue());
+		
+		
+		this.cleanUpTestData();
 	}
 	
 	

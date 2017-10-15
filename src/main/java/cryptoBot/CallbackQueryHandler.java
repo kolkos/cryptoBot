@@ -189,6 +189,11 @@ public class CallbackQueryHandler extends CommandHandler {
 			case "getTotalPortfolioValue":
 				message = this.getTotalPortfolioValue();
 				break;
+			case "getWalletValue":
+				requiredKeys.add("coin");
+				requiredKeys.add("walletID");
+				message = this.getWalletValue(requiredKeys, callDataDetails);
+				break;
 			default:
 				// if the method is not declared (yet) generate a error message
 				message = this.generateSimpleEditMessageText("Ik kan (nog) niets met dit commando!");
@@ -350,8 +355,8 @@ public class CallbackQueryHandler extends CommandHandler {
 			
 			List<InlineKeyboardButton> rowInline = new ArrayList<>();
 			
-			String buttonText = String.format("%s (%s)", walletAddress, coinName.toUpperCase());
-			String commandString = String.format("method=getWalletValue,walletID=%d", walletID);
+			String buttonText = String.format("%s (%s)", this.shortenString(walletAddress, 15), coinName.toUpperCase());
+			String commandString = String.format("method=getWalletValue,coin=%s,walletID=%d", callDataDetails.get("coinName"), walletID);
 			
 			LOG.info(buttonText);
 			LOG.info(commandString);
@@ -363,7 +368,7 @@ public class CallbackQueryHandler extends CommandHandler {
 		
 		// add the all option
 		List<InlineKeyboardButton> rowInline = new ArrayList<>();
-		String commandString = "method=getAllWalletsValues";
+		String commandString = String.format("method=getWalletValue,coin=%s,walletID=%d", callDataDetails.get("coinName"), 0);
 		
 		rowInline.add(new InlineKeyboardButton().setText("Alles")
 				.setCallbackData(commandString));
@@ -379,8 +384,7 @@ public class CallbackQueryHandler extends CommandHandler {
 		
 	}
 	
-		
-	
+
 	/**
 	 * Transforms the help text into a EditMessage. This method is called when the help button is pressed
 	 * @return
@@ -400,36 +404,41 @@ public class CallbackQueryHandler extends CommandHandler {
 		return message;
 	}
 	
+	/**
+	 * Create a update message containing the total value of the portfolio
+	 * @return the edit message containing the 
+	 */
 	private EditMessageText getTotalPortfolioValue() {
 		LOG.trace("entered getTotalPortfolioValue()");
 		
 		// get all the coins in the portfolio
 		Portfolio portfolio = new Portfolio();
+		portfolio.setRequestID(this.getRequestID());
 		portfolio.getAllCoinsInPortfolio();
 		
 		List<Coin> coins = portfolio.getCoins();
 		
 		String messageText;
-		messageText = "Hierbij de totale waarde van het portfolio.\n\n";
+		messageText = String.format("Hoi %s,\n", this.getFirstName());
+		messageText += "Op dit moment ziet de totale waarde van het portfolio er als volgt uit:\n";
 		
 		// loop through the coins
 		for(Coin coin : coins) {
 			// get the coin name
 			String coinName = coin.getCoinName();
 			double balance = coin.getTotalCoinBalance();
+			double value = coin.getTotalCurrentCoinValue();
 			// add this to the message text
-			messageText += String.format("%s: `%.8f`\n", coinName, balance);
+			messageText += String.format("%s: `%.8f` (`€%.2f`)\n", coinName, balance, value);
 		}
 		
-		// add the total value of the portfolio
-		messageText += String.format("\nTotale waarde: `%.2f`\n", portfolio.getTotalCurrentValuePortfolio());
+		// now calculate the difference to the deposits
+		double totalValue = portfolio.getTotalCurrentValuePortfolio();
+		double depositedValue = portfolio.getTotalDepositedValue();
+		double differenceDepositCurrent = totalValue - depositedValue;
 		
-		// calculate the difference to the last known value
-		double valueDifference = portfolio.getTotalCurrentValuePortfolio() - portfolio.getTotalPreviousValuePortfolio();
-		
-		
-		// add the last request
-		messageText += String.format("%.2f sinds \n", valueDifference);
+		messageText += String.format("Totale waarde: `€%.2f`\n", totalValue);
+		messageText += String.format("Ingelegd: `€%.2f` (`€%+.2f`)", depositedValue, differenceDepositCurrent);
 		
 		EditMessageText message = new EditMessageText()
                 .setChatId(this.getChatIDTelegram())
@@ -439,6 +448,79 @@ public class CallbackQueryHandler extends CommandHandler {
 		
 		message.setParseMode(ParseMode.MARKDOWN);
 		
+		return message;
+	}
+	
+	/**
+	 * Method to shorten a string. 
+	 * @param input the input string
+	 * @param maxLength the maximum length of the string
+	 * @return shortened string
+	 */
+	private String shortenString(String input, int maxLength) {
+		String newString = input.substring(0, Math.min(input.length(), maxLength - 3)) + "...";
+		
+		return newString;
+	}
+	
+	
+	private EditMessageText getWalletValue(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
+		LOG.trace("entered getWalletValue()");
+		
+		// check if the call is complete
+		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
+			// command is not complete, exit the method with an error text
+			EditMessageText message = this.generateSimpleEditMessageText("Sorry het commando van deze knop is niet compleet. #sorrynog");
+			LOG.warn("Not all required keys are found for getWalletsForCoin(). Exiting");
+			return message;
+		}
+		
+		String messageText = "Hierbij de gevonden wallets:\n\n";
+		Portfolio portfolio = new Portfolio();
+		
+		
+		// first check if the walletID is set to 0, this means all the wallets need to be listed
+		int walletID = Integer.parseInt(callDataDetails.get("walletID"));
+		if(walletID == 0) {
+			List<Coin> coins;
+			
+			// wallet ID is 0, now check if the coin == all, if so, all coins need to be listed
+			if(callDataDetails.get("coin").equals("all")) {
+				// get all the wallets for all the coins
+				portfolio.getAllCoinsInPortfolio();
+				coins = portfolio.getCoins();
+			}else {
+				// get all the wallets for the specified coin
+				portfolio.getCoinInPortfolio(callDataDetails.get("coin"));
+				coins = portfolio.getCoins();
+			}
+			// now loop through the coins to form a message
+			for(Coin coin : coins) {
+				// get the wallets
+				List<Wallet> wallets = coin.getWallets();
+				// loop through the wallets
+				for(Wallet wallet : wallets) {
+					messageText += String.format("Walletadres: `%s`\n", wallet.getWalletAddress());
+					messageText += String.format("Coin: %s\n", wallet.getCoinName().toUpperCase());
+					messageText += String.format("Aantal: `%.8f`\n", wallet.getBalanceCoin());
+					messageText += String.format("Waarde: `€%.2f`\n", wallet.getCurrentValue());
+					double differenceDeposit = wallet.getCurrentValue() - wallet.getTotalDepositedValue();
+					messageText += String.format("Inleg: `€%.2f` (`€%+.2f`)\n", wallet.getTotalDepositedValue(), differenceDeposit);
+					double differenceLastRequest = wallet.getCurrentValue() - wallet.getLastKnownValue();
+					messageText += String.format("Stijging sinds %s: `€%+.2f`\n\n", wallet.getLastResultDate(), differenceLastRequest);
+				}
+			}
+		}
+		
+		
+		// create the message
+		EditMessageText message = new EditMessageText()
+                .setChatId(this.getChatIDTelegram())
+                .setMessageId(toIntExact(this.messageID))
+                .setText(messageText);
+		message.setParseMode(ParseMode.MARKDOWN);
+		
+		LOG.trace("finished getWalletValue()");
 		return message;
 	}
 	

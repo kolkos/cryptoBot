@@ -13,8 +13,18 @@ public class Portfolio {
 	private double totalPreviousValuePortfolio = 0;
 	private double totalDepositedValue = 0;
 	
+	private int requestID = 0;
+	
 	private static final Logger LOG = LogManager.getLogger(Portfolio.class);
 	
+	public int getRequestID() {
+		return requestID;
+	}
+
+	public void setRequestID(int requestID) {
+		this.requestID = requestID;
+	}
+
 	public double getTotalDepositedValue() {
 		return totalDepositedValue;
 	}
@@ -87,6 +97,7 @@ public class Portfolio {
 		
 		this.coins = new ArrayList<>();
 		Coin coin = new Coin();
+		coin.setRequestID(this.requestID);
 		coin.getWalletsForCoin(coinName);
 		
 		// add the total coin value to the portfolio value
@@ -113,6 +124,7 @@ public class Portfolio {
 		this.receiveCoinsInPortfolio();
 		for(String coinName : coinList) {
 			Coin coin = new Coin();
+			coin.setRequestID(this.requestID);
 			coin.getWalletsForCoin(coinName);
 			
 			// calculate the total value
