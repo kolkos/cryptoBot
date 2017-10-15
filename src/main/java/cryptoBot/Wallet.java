@@ -326,7 +326,7 @@ public class Wallet {
 			MySQLAccess db = new MySQLAccess();
 			try {
 				db.executeUpdateQuery(query, parameters);
-				LOG.info("Registered result to the database");
+				LOG.trace("Registered result to the database");
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				//e.printStackTrace();
@@ -371,21 +371,9 @@ public class Wallet {
 		}
 		
 		LOG.trace("Finished getTotalDepositedValue()");
-		LOG.info("----> {}", totalDepositedValue);
 		
 		return totalDepositedValue;
 		
 	}
-	
-	public void processDepositCommand(String depositCommand) {
-		LOG.trace("entering processDepositCommand(), depositCommand={}", depositCommand);
 		
-		
-		
-		
-		LOG.trace("finished processDepositCommand()");
-	}
-	
-	
-	
 }

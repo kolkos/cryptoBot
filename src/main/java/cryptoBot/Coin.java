@@ -95,7 +95,7 @@ public class Coin {
 			
 			this.walletAddresses = new ArrayList<>();
 			while (resultSet.next()) {
-				LOG.info("found wallet: {}", resultSet.getString("walletAddress"));
+				LOG.trace("found wallet: {}", resultSet.getString("walletAddress"));
 				this.walletAddresses.add(resultSet.getString("walletAddress"));
 			}	
 		} catch (Exception e) {

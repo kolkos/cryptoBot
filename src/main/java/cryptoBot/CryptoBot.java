@@ -67,7 +67,7 @@ public class CryptoBot extends TelegramLongPollingBot {
 			incomingMessageText = incomingMessageText.toLowerCase();
 			//System.out.println(incomingMessageText);
 			
-			LOG.trace("Incoming chat message {}.", incomingMessageText);
+			LOG.trace("incomingMessageText={}.", incomingMessageText);
 			
 			// now register this incoming message
 			textMessageHandler.registerChatMessage(chatID, firstName, incomingMessageText);
@@ -96,6 +96,7 @@ public class CryptoBot extends TelegramLongPollingBot {
 			
 			// call data is the command which is set to a inline keyboard button
 			String callData = update.getCallbackQuery().getData();
+			LOG.info("callData={}", callData);
 			
 			// get the message ID (the message of the inline keyboard message)
 			// this ID is used to overwrite this method

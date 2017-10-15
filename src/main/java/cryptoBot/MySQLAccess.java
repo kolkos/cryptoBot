@@ -69,14 +69,14 @@ public class MySQLAccess {
 			for(Object x : parameters) {
 				//System.out.println(x.toString());
 				//preparedStatement.setString(i, x.toString());
-				LOG.trace("Setting parameter {} => {}", i, x);
+				LOG.info("Setting parameter {} => {}", i, x);
 				preparedStatement.setObject(i, x);
 				i++;
 			}
 			
 			resultSet = preparedStatement.executeQuery();
 			
-			LOG.info("Query ({}) Executed OK", query);
+			LOG.info("Query OK: ({})", query);
 		} catch (Exception e) {
 			throw e;
         }
@@ -104,14 +104,14 @@ public class MySQLAccess {
 			int i = 1;
 			for(Object x : parameters) {
 				//System.out.println(x.toString());
-				LOG.trace("Setting parameter {} => {}", i, x);
+				LOG.info("Setting parameter {} => {}", i, x);
 				preparedStatement.setString(i, x.toString());
 				i++;
 			}
 			
 			// just execute
 			preparedStatement.executeUpdate();
-			LOG.info("Query ({}) Executed OK", query);
+			LOG.info("Query OK: ({})", query);
 		} catch (Exception e) {
         		throw e;
         }
