@@ -193,6 +193,8 @@ public class TestWallet {
 		
 		assertEquals(this.expectedTotalCoinValue, testWallet.getTotalDepositedValue(), 0.01);
 		
+		this.cleanUpTestData();
+		
 		// now dump all the other values
 		LOG.info("Coin name       => {}", testWallet.getCoinName());
 		LOG.info("Wallet address  => {}", testWallet.getWalletAddress());
@@ -201,9 +203,6 @@ public class TestWallet {
 		LOG.info("Last value      => {}", testWallet.getLastKnownValue());
 		LOG.info("Last date       => {}", testWallet.getLastResultDate());
 		LOG.info("Total deposited => {}", testWallet.getTotalDepositedValue());
-		
-		
-		this.cleanUpTestData();
 	}
 	
 	
