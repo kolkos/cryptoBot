@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.telegram.telegrambots.api.methods.ParseMode;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -95,7 +96,7 @@ public class Deposit {
 	private boolean parseDepositCommand(String depositCommand) {
 		LOG.trace("Entered parseDepositCommand(), depositCommand={}", depositCommand);
 		/* example deposit command:
-		 * 		/deposit 14-10-2017 38Ee9XUoHp6usVRDKNTdUvS1EUsca3Sb6L 0,01234567 12.34 remark
+		 * 		/deposit 14-10-2017 38Ee9XUoHp6usVRDKNTdUvS1EUsca3Sb6L 0,01234567 12,34 voorbeeld deposit
 		 */
 		String regex = "(?<command>^/\\w+)\\s"                  // retrieve the command
 			     + "(?<date>\\d{2}\\-\\d{2}\\-\\d{4})\\s"       // retrieve the date
@@ -245,14 +246,14 @@ public class Deposit {
 	private SendMessage generateConfirmationMessage() {
 		LOG.trace("Entered generateConfirmationMessage()");
 		/* example deposit command:
-		 * 		/deposit 14-10-2017 38Ee9XUoHp6usVRDKNTdUvS1EUsca3Sb6L 0,01234567 12.34 remark
+		 * 		/deposit 14-10-2017 38Ee9XUoHp6usVRDKNTdUvS1EUsca3Sb6L 0,01234567 12,34 remark
 		 */
 		
 		String messageText = "Ik heb het volgende uit jouw commando gehaald:\n";
-		messageText += String.format("Datum: %s\n", this.depositDate);
-		messageText += String.format("Wallet: %s\n", this.walletAddress);
-		messageText += String.format("Aantal: %.8f\n", this.amount);
-		messageText += String.format("Aanschafwaarde: %.2f\n\n", this.purchaseValue);
+		messageText += String.format("Datum: `%s`\n", this.depositDate);
+		messageText += String.format("Wallet: `%s`\n", this.walletAddress);
+		messageText += String.format("Aantal: `%.8f`\n", this.amount);
+		messageText += String.format("Aanschafwaarde: `%.2f`\n\n", this.purchaseValue);
 		messageText += "Klopt dit?";
 		
 		// generate the message
@@ -280,6 +281,7 @@ public class Deposit {
 		
 		markupInline.setKeyboard(rowsInline);
 		message.setReplyMarkup(markupInline);
+		message.setParseMode(ParseMode.MARKDOWN);
 		
 		LOG.trace("Finished generateConfirmationMessage()");
 		return message;

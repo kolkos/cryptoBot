@@ -5,6 +5,8 @@ import static java.lang.Math.toIntExact;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -193,6 +195,13 @@ public class CallbackQueryHandler extends CommandHandler {
 				requiredKeys.add("coin");
 				requiredKeys.add("walletID");
 				message = this.getWalletValue(requiredKeys, callDataDetails);
+				break;
+			case "confirmDeposit":
+				requiredKeys.add("coin");
+				requiredKeys.add("walletID");
+				break;
+			case "editMessageHelpText":
+				message = this.getHelpTextEdit();
 				break;
 			default:
 				// if the method is not declared (yet) generate a error message
@@ -401,6 +410,8 @@ public class CallbackQueryHandler extends CommandHandler {
 		
 		LOG.trace("finished getHelpTextEdit()");
 		
+		message.setParseMode(ParseMode.MARKDOWN);
+		
 		return message;
 	}
 	
@@ -463,6 +474,12 @@ public class CallbackQueryHandler extends CommandHandler {
 		return newString;
 	}
 	
+	private String convertTimestampToString(Timestamp timestamp) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+		String dateString = dateFormat.format(timestamp);
+		
+		return dateString;
+	}
 	
 	private EditMessageText getWalletValue(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
 		LOG.trace("entered getWalletValue()");
@@ -475,7 +492,7 @@ public class CallbackQueryHandler extends CommandHandler {
 			return message;
 		}
 		
-		String messageText = "Hierbij de gevonden wallets:\n\n";
+		String messageText = "Hierbij de gevonden wallet(s):\n\n";
 		Portfolio portfolio = new Portfolio();
 		
 		
@@ -507,9 +524,23 @@ public class CallbackQueryHandler extends CommandHandler {
 					double differenceDeposit = wallet.getCurrentValue() - wallet.getTotalDepositedValue();
 					messageText += String.format("Inleg: `€%.2f` (`€%+.2f`)\n", wallet.getTotalDepositedValue(), differenceDeposit);
 					double differenceLastRequest = wallet.getCurrentValue() - wallet.getLastKnownValue();
-					messageText += String.format("Stijging sinds %s: `€%+.2f`\n\n", wallet.getLastResultDate(), differenceLastRequest);
+					messageText += String.format("Stijging sinds %s: `€%+.2f`\n\n", this.convertTimestampToString(wallet.getLastResultDate()), differenceLastRequest);
 				}
 			}
+		}else {
+			// an actual wallet ID has been set, get this wallet by the ID
+			Wallet wallet = new Wallet();
+			wallet.getWalletValueByID(walletID);
+			// now generate the message
+			messageText += String.format("Walletadres: `%s`\n", wallet.getWalletAddress());
+			messageText += String.format("Coin: %s\n", wallet.getCoinName().toUpperCase());
+			messageText += String.format("Aantal: `%.8f`\n", wallet.getBalanceCoin());
+			messageText += String.format("Waarde: `€%.2f`\n", wallet.getCurrentValue());
+			double differenceDeposit = wallet.getCurrentValue() - wallet.getTotalDepositedValue();
+			messageText += String.format("Inleg: `€%.2f` (`€%+.2f`)\n", wallet.getTotalDepositedValue(), differenceDeposit);
+			double differenceLastRequest = wallet.getCurrentValue() - wallet.getLastKnownValue();
+			messageText += String.format("Stijging sinds %s: `€%+.2f`\n\n", this.convertTimestampToString(wallet.getLastResultDate()), differenceLastRequest);
+			
 		}
 		
 		

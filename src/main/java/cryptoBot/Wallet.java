@@ -375,5 +375,48 @@ public class Wallet {
 		return totalDepositedValue;
 		
 	}
+	
+	/**
+	 * Get the wallet data by wallet ID. This method just gets the wallet address and works from there
+	 * @param walletID
+	 */
+	public void getWalletValueByID(int walletID) {
+		LOG.trace("Entering getWalletDataByID()");
+		
+		String query = "SELECT address FROM wallets WHERE id = ?";
+		Object[] parameters = new Object[] {walletID};
+		MySQLAccess db = new MySQLAccess();
+		
+		String walletAddress = null;
+		
+		try {
+			db.executeSelectQuery(query, parameters);
+			
+			ResultSet resultSet = db.getResultSet();
+
+			// now register the received values
+			while (resultSet.next()) {
+				walletAddress = resultSet.getString("address");
+			}
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			LOG.fatal("Error getting the wallet address by from the database: {}", e);
+		}finally {
+			db.close();
+		}
+		
+		// check if a address is found
+		if(walletAddress == null) {
+			LOG.error("No wallet found for id {}", walletID);
+			return;
+		}
+		
+		// now run the general method
+		this.getWalletValue(walletAddress);
+		
+		LOG.trace("Finished getWalletDataByID()");
+	}
 		
 }

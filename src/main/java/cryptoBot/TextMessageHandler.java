@@ -1,10 +1,15 @@
 package cryptoBot;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.telegram.telegrambots.api.methods.send.SendMessage;
+import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 
 public class TextMessageHandler extends CommandHandler {
 	
@@ -71,10 +76,44 @@ public class TextMessageHandler extends CommandHandler {
 					Deposit deposit = new Deposit();
 					deposit.processDepositCommand(this.getChatIDTelegram(), this.getIncomingMessage());
 					break;
+				case "/help":
+					this.sendHelpText();
+					break;
+				case "/test":
+					this.testReplyKeyboard();
+					break;
+				default:
+					this.sendStringToChat("Sorry wat?");
 			}
 		}
 		
 		LOG.trace("finished runTextMessageCommand()");
+	}
+	
+	private void sendHelpText() {
+		String helpText = this.generateHelpText();
+		this.sendStringToChat(helpText);
+	}
+	
+	private void testReplyKeyboard() {
+		SendMessage message = new SendMessage() // Create a message object object
+                .setChatId(this.getChatIDTelegram())
+                .setText("Test keyboard");
+		ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+		List<KeyboardRow> keyboard = new ArrayList<>();
+		KeyboardRow row = new KeyboardRow();
+		
+		row.add("Knopje 1");
+		row.add("Knopje 2");
+		row.add("Knopje 3");
+		
+		keyboard.add(row);
+		
+		keyboardMarkup.setKeyboard(keyboard);
+		
+		message.setReplyMarkup(keyboardMarkup);
+		
+		this.sendMessageToChat(message);
 	}
 	
 }

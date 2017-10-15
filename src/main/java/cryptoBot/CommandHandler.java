@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.telegram.telegrambots.api.methods.ParseMode;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -276,6 +277,8 @@ public class CommandHandler extends CryptoBot {
 		
 		LOG.trace("finished generateSimpleSendMessage()");
 		
+		message.setParseMode(ParseMode.MARKDOWN);
+		
 		return message;	
 	}
 	
@@ -309,12 +312,42 @@ public class CommandHandler extends CryptoBot {
 		LOG.trace("entered generateHelpText()");
 		
 		String messageText = "Op dit moment kun je de volgende commando's uitvoeren:\n";
-		messageText += "- *bot* => open het menu\n";
-		//messageText += "- /registerCoin <afkorting> <coin naam> => Registreren van een nieuwe coin\n";
-		//messageText += "- /registerWallet <afkorting coin> <wallet adres> => Registreren van nieuwe wallet";
-		messageText += "- /help => verkrijg deze helptekst";
-		//messageText += "- /registerDeposit <wallet adres> <aantal coins> <> => Registreren van nieuwe wallet";
+		messageText += "*/help*\n";
+		messageText += "Dit commando laat deze helptekst zien.\n";
+		messageText += "Commando: `/help`\n";
+		messageText += "Voorbeeld: `/help`\n";
 		
+		messageText += "\n*/deposit*\n";
+		messageText += "Met dit commando kun je een deposit registreren. Als het commando het juiste formaat bevat, wordt er een bevestiging gevraagd.\n";
+		messageText += "Commando: `/deposit <datum> <walletadres> <aantal coins> <aanschafwaarde> <opmerking (optioneel)>`\n";
+		messageText += "Voorbeeld: `/deposit 14-10-2017 38Ee9XUoHp6usVRDKNTdUvS1EUsca3Sb6L 0,01234567 12,34 voorbeeld deposit`\n";
+		messageText += "\n_Parameters:_\n";
+		
+		messageText += "_datum_: datum van de deposit\n";
+		messageText += "  formaat: `dd-mm-jjjj`\n";
+		messageText += "  voorbeeld: `01-10-2017`\n";
+		messageText += "  opmerking: de datum moet voorloopnullen bevatten\n";
+		
+		messageText += "_walletadres_: het adres van de wallet\n";
+		messageText += "  formaat: `34 tekens`\n";
+		messageText += "  voorbeeld: `38Ee9XUoHp6usVRDKNTdUvS1EUsca3Sb6L`\n";
+		messageText += "  opmerking: De wallet moet geregistreerd zijn\n";
+		
+		messageText += "_aantal coins_: het aantal aangekochte coins\n";
+		messageText += "  formaat: `0,00000000`\n";
+		messageText += "  voorbeeld: `0,01234567`\n";
+		messageText += "  opmerking: er moet tenminste 1 decimaal opgegeven zijn\n";
+		
+		messageText += "_aanschafwaarde_: de prijs van de coins op het moment van aanschaf\n";
+		messageText += "  formaat: `0,00`\n";
+		messageText += "  voorbeeld: `45,00`\n";
+		messageText += "  opmerking: er moet tenminste 1 decimaal opgegeven zijn\n";
+		
+		messageText += "_opmerking_: een opmerking\n";
+		messageText += "  formaat: `vrije tekst`\n";
+		messageText += "  voorbeeld: `eerste aanschaf`\n";
+		messageText += "  opmerking: je mag de opmerking ook gewoon weglaten\n";
+				
 		LOG.trace("finished generateHelpText()");
 		
 		return messageText;
