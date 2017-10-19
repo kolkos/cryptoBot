@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 
 public class TextMessageHandler extends CommandHandler {
@@ -79,9 +80,15 @@ public class TextMessageHandler extends CommandHandler {
 				case "/help":
 					this.sendHelpText();
 					break;
-				case "/test":
-					this.testReplyKeyboard();
+				case "/status":
+					this.sendStringToChat("Ja ik ben er nog?");
 					break;
+//				case "/test":
+//					this.testReplyKeyboard();
+//					break;
+//				case "/hide":
+//					this.hideKeyboard();
+//					break;
 				default:
 					this.sendStringToChat("Sorry wat?");
 			}
@@ -95,25 +102,35 @@ public class TextMessageHandler extends CommandHandler {
 		this.sendStringToChat(helpText);
 	}
 	
-	private void testReplyKeyboard() {
-		SendMessage message = new SendMessage() // Create a message object object
-                .setChatId(this.getChatIDTelegram())
-                .setText("Test keyboard");
-		ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-		List<KeyboardRow> keyboard = new ArrayList<>();
-		KeyboardRow row = new KeyboardRow();
-		
-		row.add("Knopje 1");
-		row.add("Knopje 2");
-		row.add("Knopje 3");
-		
-		keyboard.add(row);
-		
-		keyboardMarkup.setKeyboard(keyboard);
-		
-		message.setReplyMarkup(keyboardMarkup);
-		
-		this.sendMessageToChat(message);
-	}
+//	private void testReplyKeyboard() {
+//		SendMessage message = new SendMessage() // Create a message object object
+//                .setChatId(this.getChatIDTelegram())
+//                .setText("Test keyboard");
+//		ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+//		List<KeyboardRow> keyboard = new ArrayList<>();
+//		KeyboardRow row = new KeyboardRow();
+//		
+//		row.add("/help");
+//		row.add("Knopje 2");
+//		row.add("Knopje 3");
+//		
+//		keyboard.add(row);
+//		
+//		keyboardMarkup.setKeyboard(keyboard);
+//		
+//		message.setReplyMarkup(keyboardMarkup);
+//		
+//		this.sendMessageToChat(message);
+//	}
+//	
+//	public void hideKeyboard() {
+//		SendMessage msg = new SendMessage()
+//                .setChatId(this.getChatIDTelegram())
+//                .setText("Keyboard hidden");
+//        ReplyKeyboardRemove keyboardMarkup = new ReplyKeyboardRemove();
+//        msg.setReplyMarkup(keyboardMarkup);
+//        
+//        this.sendMessageToChat(msg);
+//	}
 	
 }

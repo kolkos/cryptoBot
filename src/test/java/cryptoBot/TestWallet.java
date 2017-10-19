@@ -57,7 +57,7 @@ public class TestWallet {
 		long chatID = -236099150;
 		String walletAddress = "38Ee9XUoHp6usVRDKNTdUvS1EUsca3Sb6L";
 		
-		for(int i=0; i<5; i++) {
+		for(int i=0; i<1; i++) {
 			Random r = new Random();
 			
 			// first generate a random coin amount
@@ -184,6 +184,7 @@ public class TestWallet {
 		LOG.info("Balance         => {}", testWallet.getBalanceCoin());
 		LOG.info("Last value      => {}", testWallet.getLastKnownValue());
 		LOG.info("Total deposited => {}", testWallet.getTotalDepositedValue());
+		
 		
 		// now confirm the fake transactions
 		this.confirmFakeTransactions();

@@ -78,6 +78,8 @@ public class MySQLAccess {
 			
 			LOG.info("Query OK: ({})", query);
 		} catch (Exception e) {
+			LOG.fatal("Error executing query: '{}'", query);
+    			LOG.fatal("Used parameters: '{}'", parameters);
 			throw e;
         }
 		LOG.trace("Finished executeSelectQuery()");
@@ -113,7 +115,9 @@ public class MySQLAccess {
 			preparedStatement.executeUpdate();
 			LOG.info("Query OK: ({})", query);
 		} catch (Exception e) {
-        		throw e;
+        		LOG.fatal("Error executing query: '{}'", query);
+        		LOG.fatal("Used parameters: '{}'", parameters);
+			throw e;
         }
 		LOG.trace("Finished executeUpdateQuery()");
 	}

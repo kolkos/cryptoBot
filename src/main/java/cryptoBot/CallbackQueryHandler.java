@@ -197,8 +197,9 @@ public class CallbackQueryHandler extends CommandHandler {
 				message = this.getWalletValue(requiredKeys, callDataDetails);
 				break;
 			case "confirmDeposit":
-				requiredKeys.add("coin");
-				requiredKeys.add("walletID");
+				requiredKeys.add("confirm");
+				requiredKeys.add("depositID");
+				message = this.confirmDeposit(requiredKeys, callDataDetails);
 				break;
 			case "editMessageHelpText":
 				message = this.getHelpTextEdit();
@@ -448,8 +449,13 @@ public class CallbackQueryHandler extends CommandHandler {
 		double depositedValue = portfolio.getTotalDepositedValue();
 		double differenceDepositCurrent = totalValue - depositedValue;
 		
-		messageText += String.format("Totale waarde: `€%.2f`\n", totalValue);
-		messageText += String.format("Ingelegd: `€%.2f` (`€%+.2f`)", depositedValue, differenceDepositCurrent);
+		messageText += String.format("Totale waarde: `€%.2f` (`€%+.2f`)\n", totalValue, differenceDepositCurrent);
+		messageText += String.format("Ingelegd: `€%.2f`\n", depositedValue );
+		
+		// calculate the ROI
+		double roi = (100 * differenceDepositCurrent) / depositedValue;
+		messageText += String.format("Rendement: `%.1f%%`\n", roi );
+		
 		
 		EditMessageText message = new EditMessageText()
                 .setChatId(this.getChatIDTelegram())
@@ -552,6 +558,43 @@ public class CallbackQueryHandler extends CommandHandler {
 		message.setParseMode(ParseMode.MARKDOWN);
 		
 		LOG.trace("finished getWalletValue()");
+		return message;
+	}
+	
+	private EditMessageText confirmDeposit(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
+		LOG.trace("entered confirmDeposit()");
+		
+		// check if the call is complete
+		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
+			// command is not complete, exit the method with an error text
+			EditMessageText message = this.generateSimpleEditMessageText("Sorry het commando van deze knop is niet compleet. #sorrynog");
+			LOG.warn("Not all required keys are found for getWalletsForCoin(). Exiting");
+			return message;
+		}
+		
+		// use the deposit method
+		Deposit deposit = new Deposit();
+		int confirm = Integer.parseInt(callDataDetails.get("confirm"));
+		int depositID = Integer.parseInt(callDataDetails.get("depositID"));
+		String messageText;
+		
+		try {
+			deposit.confirmDeposit(confirm, depositID);
+			messageText = "Deposit bevestigd.";
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			messageText = "Er ging iets fout tijdens het bevestigen.";
+			LOG.fatal("Error confirming deposit, {}", e);
+		}
+		
+		// create the message
+		EditMessageText message = new EditMessageText()
+                .setChatId(this.getChatIDTelegram())
+                .setMessageId(toIntExact(this.messageID))
+                .setText(messageText);
+		
+		LOG.trace("finished confirmDeposit()");
 		return message;
 	}
 	

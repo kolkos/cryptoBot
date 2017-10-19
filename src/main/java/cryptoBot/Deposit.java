@@ -287,4 +287,28 @@ public class Deposit {
 		return message;
 	}
 	
+	public void confirmDeposit(int confirm, int depositID) throws Exception {
+		LOG.trace("Entered confirmDeposit(), confirm={}, depositID={}", confirm, depositID);
+		
+		// depending on the value of confirm, the deposit must be deleted or updated
+		// form query based on thos value
+		String query;
+		if(confirm == 0) {
+			// just to be sure, only delete if confirmed = 0
+			query = "DELETE FROM deposits "
+					+ "WHERE id = ? "
+					+ "AND confirmed = 0";
+		} else {
+			query = "UPDATE deposits SET confirmed = 1 WHERE id = ?";
+		}
+		Object[] parameters = new Object[] {depositID};
+		
+		MySQLAccess db = new MySQLAccess();
+				
+		db.executeUpdateQuery(query, parameters);
+		db.close();
+		
+		LOG.trace("Finished confirmDeposit()");
+	}
+	
 }

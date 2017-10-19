@@ -28,16 +28,16 @@ public class Main {
             
         		BotSession botSession = botsApi.registerBot(new CryptoBot());
         		
-//        		// automatic update the wallet on a hourly basis
-//        		ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-//            ses.scheduleAtFixedRate(new Runnable() {
-//                @Override
-//                public void run() {
-//                		LOG.info("Triggered automatic task");
-//                    CryptoBot sendBot = new CryptoBot();
-//                    sendBot.automaticStatusUpdatePortfolio();
-//                }
-//            }, 0, 1, TimeUnit.HOURS);
+        		// automatic update the wallet on a hourly basis
+        		ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
+            ses.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                		LOG.info("Triggered automatic update task");
+                    AutoRequest autoRequest = new AutoRequest();
+                    autoRequest.runAutomaticRequest();
+                }
+            }, 0, 2, TimeUnit.HOURS);
             
             // check if the bot is still online
             // somehow this keeps the bot alive

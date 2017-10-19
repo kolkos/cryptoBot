@@ -23,6 +23,8 @@ public class General {
 	 * Load the properties (configuration) from the database
 	 */
 	private void loadProperties() {
+		LOG.trace("Entered loadProperties()");
+		
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		
 		properties = new Properties();
@@ -35,27 +37,16 @@ public class General {
 			Enumeration<?> e = properties.propertyNames();
 			while (e.hasMoreElements()) {
 				String key = (String) e.nextElement();
-				String value = properties.getProperty(key);
+				properties.getProperty(key);
 				//System.out.println("Key : " + key + ", Value : " + value);
 			}
+			is.close();
 			
+			LOG.info("Config loaded");
 		}catch (IOException e) {
-			e.printStackTrace();
+			LOG.fatal("Error loading config, {}", e);
 		}
 		
 	}
-	
-	public void testLogje() {
-		LOG.debug("This will be printed on debug");
-        LOG.info("This will be printed on info");
-        LOG.warn("This will be printed on warn");
-        LOG.error("This will be printed on error");
-        LOG.fatal("This will be printed on fatal");
-        LOG.trace("This will be printed on trace");
-        //LOG.error("Error Message Logged !!!", new NullPointerException("NullError"));
-
-        LOG.info("Appending string: {}.", "Hello, World");
-	}
-	
-	
+		
 }
