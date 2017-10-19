@@ -52,66 +52,63 @@ public class AutoRequest extends CryptoBot {
 		// get the chatIDS
 		List<Long> chatIDs = this.getChatIDs();
 		// loop through the chat IDs
+		
+		// first create the objects
+		// generate a new request by using the CommandHandler
+		CommandHandler commandHandler = new CommandHandler();
+		Portfolio portfolio = new Portfolio();
+		
+		
+		// set the name
+		commandHandler.setFirstName("cryptoBot");
+		
+		// set the command
+		commandHandler.setIncomingMessage("method=getTotalPortfolioValu");
+		
+		// set the telegram chat id
+		commandHandler.setChatIDTelegram(0);
+		
+		// register the request
+		commandHandler.registerRequestInDatabase();
+		
+		// get the request ID
+		int requestID = commandHandler.getRequestID();
+		
+		// now generate the status message
+		
+		// get all the coins in the portfolio
+		portfolio.setRequestID(requestID);
+		portfolio.getAllCoinsInPortfolio();
+		List<Coin> coins = portfolio.getCoins();
+		
+		String messageText;
+		messageText = String.format("Hoi %s,\n\n", "lieve kijkbuiskinderen,");
+		messageText += "Hierbij de automatische status update van het portfolio:\n";
+		
+		// loop through the coins
+		for(Coin coin : coins) {
+			// get the coin name
+			String coinName = coin.getCoinName();
+			double balance = coin.getTotalCoinBalance();
+			double value = coin.getTotalCurrentCoinValue();
+			// add this to the message text
+			messageText += String.format("%s: `%.8f` (`€%.2f`)\n", coinName, balance, value);
+		}
+		
+		// now calculate the difference to the deposits
+		double totalValue = portfolio.getTotalCurrentValuePortfolio();
+		double depositedValue = portfolio.getTotalDepositedValue();
+		double differenceDepositCurrent = totalValue - depositedValue;
+		
+		messageText += String.format("Totale waarde: `€%.2f`\n", totalValue);
+		messageText += String.format("Ingelegd: `€%.2f` (`€%+.2f`)", depositedValue, differenceDepositCurrent);
+		
+		// now loop through the chat IDs
 		for(Long chatID : chatIDs) {
-			// generate a new request by using the CommandHandler
-			CommandHandler commandHandler = new CommandHandler();
-			
-			// set the telegram chat id
-			commandHandler.setChatIDTelegram(chatID);
-			
-			// set the name
-			commandHandler.setFirstName("cryptoBot");
-			
-			// set the command
-			commandHandler.setIncomingMessage("method=getTotalPortfolioValu");
-			
-			// register the request
-			commandHandler.registerRequestInDatabase();
-			
-			// get the request ID
-			int requestID = commandHandler.getRequestID();
-			
-			// get all the coins in the portfolio
-			Portfolio portfolio = new Portfolio();
-			portfolio.setRequestID(requestID);
-			portfolio.getAllCoinsInPortfolio();
-			
-			
-			List<Coin> coins = portfolio.getCoins();
-			
-			String messageText;
-			messageText = String.format("Hoi %s,\n\n", "lieve kijkbuiskinderen,");
-			messageText += "Hierbij de automatische status update van het portfolio:\n";
-			
-			// loop through the coins
-			for(Coin coin : coins) {
-				// get the coin name
-				String coinName = coin.getCoinName();
-				double balance = coin.getTotalCoinBalance();
-				double value = coin.getTotalCurrentCoinValue();
-				// add this to the message text
-				messageText += String.format("%s: `%.8f` (`€%.2f`)\n", coinName, balance, value);
-			}
-			
-			// now calculate the difference to the deposits
-			double totalValue = portfolio.getTotalCurrentValuePortfolio();
-			double depositedValue = portfolio.getTotalDepositedValue();
-			double differenceDepositCurrent = totalValue - depositedValue;
-			
-			messageText += String.format("Totale waarde: `€%.2f`\n", totalValue);
-			messageText += String.format("Ingelegd: `€%.2f` (`€%+.2f`)", depositedValue, differenceDepositCurrent);
 			
 			// because sending a request to a group without the bot throws an error
 			// use this custom code instead
 			this.sendAutomaticStatusUpdate(messageText, chatID);
-			
-			// wait for 5 seconds
-			try {
-				TimeUnit.SECONDS.sleep(5);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				LOG.warn("Error waiting!?, {}", e);
-			}
 			
 		}
 		LOG.trace("Finished runAutomaticRequest()");
@@ -122,7 +119,7 @@ public class AutoRequest extends CryptoBot {
 		LOG.trace("Entered sendAutomaticStatusUpdate()");
 		
 		int from = 1000;
-	    int to = 2000;
+	    int to = 2300;
 	    Date date = new Date();
 	    Calendar c = Calendar.getInstance();
 	    c.setTime(date);

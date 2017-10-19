@@ -530,7 +530,7 @@ public class CallbackQueryHandler extends CommandHandler {
 					double differenceDeposit = wallet.getCurrentValue() - wallet.getTotalDepositedValue();
 					messageText += String.format("Inleg: `€%.2f` (`€%+.2f`)\n", wallet.getTotalDepositedValue(), differenceDeposit);
 					double differenceLastRequest = wallet.getCurrentValue() - wallet.getLastKnownValue();
-					messageText += String.format("Stijging sinds %s: `€%+.2f`\n\n", this.convertTimestampToString(wallet.getLastResultDate()), differenceLastRequest);
+					messageText += String.format("Verschil sinds %s: `€%+.2f`\n\n", this.convertTimestampToString(wallet.getLastResultDate()), differenceLastRequest);
 				}
 			}
 		}else {
@@ -545,7 +545,7 @@ public class CallbackQueryHandler extends CommandHandler {
 			double differenceDeposit = wallet.getCurrentValue() - wallet.getTotalDepositedValue();
 			messageText += String.format("Inleg: `€%.2f` (`€%+.2f`)\n", wallet.getTotalDepositedValue(), differenceDeposit);
 			double differenceLastRequest = wallet.getCurrentValue() - wallet.getLastKnownValue();
-			messageText += String.format("Stijging sinds %s: `€%+.2f`\n\n", this.convertTimestampToString(wallet.getLastResultDate()), differenceLastRequest);
+			messageText += String.format("Verschil sinds %s: `€%+.2f`\n\n", this.convertTimestampToString(wallet.getLastResultDate()), differenceLastRequest);
 			
 		}
 		
