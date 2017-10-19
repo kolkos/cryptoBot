@@ -27,6 +27,6 @@ Changes:
   - Added logging
   - Added deposit functionality
 Fixes:
-  - Edited regex to only trigger on the word bor (not as part of a word)
+  - Edited regex to only trigger on the word bot (not as part of a word)
     
 ------------
