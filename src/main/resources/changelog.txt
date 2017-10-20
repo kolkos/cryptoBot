@@ -1,14 +1,20 @@
 Application:        cryptoBot
 
-Version:            v0.2
-Last update on:     15-10-2017
+Version:            v0.3
+Last update on:     19-10-2017
 Last updates by:    Anton (@Kolkos)
 
 ------------
 
+Change log:
+
+Version             v0.3
+Date:               19-10-2017
 Changes
+  - bla!
+
 Version:            v0.2
-Date                15-10-2017
+Date:               15-10-2017
 Changes:
   - Added automatic request job:
     * The bot now request the status of the portfolio every hour;
@@ -21,6 +27,6 @@ Changes:
   - Added logging
   - Added deposit functionality
 Fixes:
-  - Edited regex to only trigger on the word bor (not as part of a word)
+  - Edited regex to only trigger on the word bot (not as part of a word)
     
 ------------

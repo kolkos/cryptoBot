@@ -13,3 +13,6 @@ config.properties
 
 # log file
 cryptoBot.log.json
+
+# todo list
+2do.txt
