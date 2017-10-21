@@ -37,7 +37,7 @@ public class Main {
                     AutoRequest autoRequest = new AutoRequest();
                     autoRequest.runAutomaticRequest();
                 }
-            }, 0, 2, TimeUnit.HOURS);
+            }, 0, 1, TimeUnit.HOURS);
             
             // check if the bot is still online
             // somehow this keeps the bot alive
