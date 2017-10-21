@@ -79,5 +79,11 @@ public class TestPortfolio {
 		}
 	}
 	
+	@Test
+	public void testStatusMessage() {
+		Portfolio portfolio = new Portfolio();
+		System.out.println(portfolio.generatePortfolioStatusMessage("JUnit"));
+	}
+	
 
 }

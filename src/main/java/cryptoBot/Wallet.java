@@ -418,5 +418,33 @@ public class Wallet {
 		
 		LOG.trace("Finished getWalletDataByID()");
 	}
+	
+	public String generateWalletStatusMessage() {
+		LOG.trace("Entering generateWalletStatusMessage()");
+		
+		General general = new General();
+		
+		String messageText;
+		messageText =  String.format("Walletadres: `%s`\n", this.walletAddress);
+		messageText += String.format("Coin: %s\n", this.coinName.toUpperCase());
+		messageText += String.format("Aantal: `%s`\n", general.getDutchNumberFormat(this.balanceCoin, "", "", false, 8));
+		messageText += String.format("Waarde: `%s`\n", general.getDutchNumberFormat(this.currentValue, "€ ", "", false, 2));
+		
+		double differenceDeposit = this.currentValue - this.totalDepositedValue;
+		
+		messageText += String.format("Inleg: `%s` (`%s`)\n", 
+				general.getDutchNumberFormat(this.totalDepositedValue, "€ ", "", false, 2),
+				general.getDutchNumberFormat(differenceDeposit, "€ ", "", true, 2));
+		
+		double differenceLastRequest = this.currentValue - this.lastKnownValue;
+		
+		messageText += String.format("Verschil sinds %s: `%s`\n\n", 
+				general.convertTimestampToString(this.lastResultDate), 
+				general.getDutchNumberFormat(differenceLastRequest, "€ ", "", true, 2));
+		
+		
+		LOG.trace("Finished generateWalletStatusMessage()");
+		return messageText;
+	}
 		
 }

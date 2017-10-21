@@ -1,12 +1,20 @@
 Application:        cryptoBot
 
-Version:            v0.2
-Last update on:     15-10-2017
+Version:            v0.2.1
+Last update on:     21-10-2017
 Last updates by:    Anton (@Kolkos)
 
 ------------
 
-Changes
+Change log
+
+Version:            v0.2.1
+Date                21-10-2017
+Changes:
+  - Fixed formatting in status message;
+  - Created a general method to create the portfolio status message text;
+  - Created a general method to create the wallet status message text;
+
 Version:            v0.2
 Date                15-10-2017
 Changes:

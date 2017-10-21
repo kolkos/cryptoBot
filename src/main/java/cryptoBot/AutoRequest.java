@@ -78,30 +78,10 @@ public class AutoRequest extends CryptoBot {
 		
 		// get all the coins in the portfolio
 		portfolio.setRequestID(requestID);
-		portfolio.getAllCoinsInPortfolio();
-		List<Coin> coins = portfolio.getCoins();
 		
-		String messageText;
-		messageText = String.format("Hoi %s,\n\n", "lieve kijkbuiskinderen,");
-		messageText += "Hierbij de automatische status update van het portfolio:\n";
 		
-		// loop through the coins
-		for(Coin coin : coins) {
-			// get the coin name
-			String coinName = coin.getCoinName();
-			double balance = coin.getTotalCoinBalance();
-			double value = coin.getTotalCurrentCoinValue();
-			// add this to the message text
-			messageText += String.format("%s: `%.8f` (`€%.2f`)\n", coinName, balance, value);
-		}
+		String messageText = portfolio.generatePortfolioStatusMessage("lieve kijkbuiskindertjes");
 		
-		// now calculate the difference to the deposits
-		double totalValue = portfolio.getTotalCurrentValuePortfolio();
-		double depositedValue = portfolio.getTotalDepositedValue();
-		double differenceDepositCurrent = totalValue - depositedValue;
-		
-		messageText += String.format("Totale waarde: `€%.2f`\n", totalValue);
-		messageText += String.format("Ingelegd: `€%.2f` (`€%+.2f`)", depositedValue, differenceDepositCurrent);
 		
 		// now loop through the chat IDs
 		for(Long chatID : chatIDs) {
@@ -118,8 +98,8 @@ public class AutoRequest extends CryptoBot {
 	private void sendAutomaticStatusUpdate(String messageText, long chatID) {
 		LOG.trace("Entered sendAutomaticStatusUpdate()");
 		
-		int from = 1000;
-	    int to = 2300;
+		int from = 1200;
+	    int to = 1300;
 	    Date date = new Date();
 	    Calendar c = Calendar.getInstance();
 	    c.setTime(date);
