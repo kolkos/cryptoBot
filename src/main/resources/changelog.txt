@@ -14,7 +14,9 @@ Changes:
   - Fixed formatting in status message;
   - Created a general method to create the portfolio status message text;
   - Created a general method to create the wallet status message text;
-
+  - Disabled the *bot* command, menu can now be called with /bot /menu
+   
+   
 Version:            v0.2
 Date                15-10-2017
 Changes:
