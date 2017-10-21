@@ -5,7 +5,6 @@ Last update on:     21-10-2017
 Last updates by:    Anton (@Kolkos)
 
 ------------
-
 Change log
 
 Version:            v0.2.1
@@ -16,9 +15,10 @@ Changes:
   - Created a general method to create the wallet status message text;
   - Disabled the *bot* command, menu can now be called with /bot /menu
    
-   
+ 
+
 Version:            v0.2
-Date                15-10-2017
+Date:               15-10-2017
 Changes:
   - Added automatic request job:
     * The bot now request the status of the portfolio every hour;
@@ -33,4 +33,3 @@ Changes:
 Fixes:
   - Edited regex to only trigger on the word bot (not as part of a word)
     
-------------

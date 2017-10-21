@@ -68,6 +68,9 @@ public class TextMessageHandler extends CommandHandler {
 //				case "/hide":
 //					this.hideKeyboard();
 //					break;
+				case "/pic":
+					this.sendTestPic();
+					break;
 				default:
 					this.sendStringToChat("Sorry wat?");
 			}
@@ -111,5 +114,28 @@ public class TextMessageHandler extends CommandHandler {
 //        
 //        this.sendMessageToChat(msg);
 //	}
+	
+	private void sendTestPic() {
+		SendPhoto sendPhotoRequest = new SendPhoto();
+		String chatID = "-236099150";
+		sendPhotoRequest.setChatId(chatID);
+		
+		String path = "/Users/antonvanderkolk/Downloads/23-3.jpg";
+		InputStream inputStream;
+		try {
+			inputStream = new FileInputStream(path);
+			sendPhotoRequest.setNewPhoto(path, inputStream);
+			sendPhoto(sendPhotoRequest);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TelegramApiException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+	}
 	
 }
