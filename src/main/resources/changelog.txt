@@ -1,17 +1,21 @@
 Application:        cryptoBot
 
-Version:            v0.3
-Last update on:     19-10-2017
+Version:            v0.2.1
+Last update on:     21-10-2017
 Last updates by:    Anton (@Kolkos)
 
 ------------
+Change log
 
-Change log:
-
-Version             v0.3
-Date:               19-10-2017
-Changes
-  - bla!
+Version:            v0.2.1
+Date                21-10-2017
+Changes:
+  - Fixed formatting in status message;
+  - Created a general method to create the portfolio status message text;
+  - Created a general method to create the wallet status message text;
+  - Disabled the *bot* command, menu can now be called with /bot /menu
+   
+ 
 
 Version:            v0.2
 Date:               15-10-2017
@@ -29,4 +33,3 @@ Changes:
 Fixes:
   - Edited regex to only trigger on the word bot (not as part of a word)
     
-------------

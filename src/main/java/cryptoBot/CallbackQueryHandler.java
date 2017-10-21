@@ -426,37 +426,8 @@ public class CallbackQueryHandler extends CommandHandler {
 		// get all the coins in the portfolio
 		Portfolio portfolio = new Portfolio();
 		portfolio.setRequestID(this.getRequestID());
-		portfolio.getAllCoinsInPortfolio();
-		
-		List<Coin> coins = portfolio.getCoins();
-		
-		String messageText;
-		messageText = String.format("Hoi %s,\n", this.getFirstName());
-		messageText += "Op dit moment ziet de totale waarde van het portfolio er als volgt uit:\n";
-		
-		// loop through the coins
-		for(Coin coin : coins) {
-			// get the coin name
-			String coinName = coin.getCoinName();
-			double balance = coin.getTotalCoinBalance();
-			double value = coin.getTotalCurrentCoinValue();
-			// add this to the message text
-			messageText += String.format("%s: `%.8f` (`€%.2f`)\n", coinName, balance, value);
-		}
-		
-		// now calculate the difference to the deposits
-		double totalValue = portfolio.getTotalCurrentValuePortfolio();
-		double depositedValue = portfolio.getTotalDepositedValue();
-		double differenceDepositCurrent = totalValue - depositedValue;
-		
-		messageText += String.format("Totale waarde: `€%.2f` (`€%+.2f`)\n", totalValue, differenceDepositCurrent);
-		messageText += String.format("Ingelegd: `€%.2f`\n", depositedValue );
-		
-		// calculate the ROI
-		double roi = (100 * differenceDepositCurrent) / depositedValue;
-		messageText += String.format("Rendement: `%.1f%%`\n", roi );
-		
-		
+		String messageText = portfolio.generatePortfolioStatusMessage(this.getFirstName());
+				
 		EditMessageText message = new EditMessageText()
                 .setChatId(this.getChatIDTelegram())
                 .setMessageId(toIntExact(this.messageID))
@@ -480,12 +451,7 @@ public class CallbackQueryHandler extends CommandHandler {
 		return newString;
 	}
 	
-	private String convertTimestampToString(Timestamp timestamp) {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-		String dateString = dateFormat.format(timestamp);
-		
-		return dateString;
-	}
+	
 	
 	private EditMessageText getWalletValue(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
 		LOG.trace("entered getWalletValue()");
@@ -523,14 +489,7 @@ public class CallbackQueryHandler extends CommandHandler {
 				List<Wallet> wallets = coin.getWallets();
 				// loop through the wallets
 				for(Wallet wallet : wallets) {
-					messageText += String.format("Walletadres: `%s`\n", wallet.getWalletAddress());
-					messageText += String.format("Coin: %s\n", wallet.getCoinName().toUpperCase());
-					messageText += String.format("Aantal: `%.8f`\n", wallet.getBalanceCoin());
-					messageText += String.format("Waarde: `€%.2f`\n", wallet.getCurrentValue());
-					double differenceDeposit = wallet.getCurrentValue() - wallet.getTotalDepositedValue();
-					messageText += String.format("Inleg: `€%.2f` (`€%+.2f`)\n", wallet.getTotalDepositedValue(), differenceDeposit);
-					double differenceLastRequest = wallet.getCurrentValue() - wallet.getLastKnownValue();
-					messageText += String.format("Verschil sinds %s: `€%+.2f`\n\n", this.convertTimestampToString(wallet.getLastResultDate()), differenceLastRequest);
+					messageText += wallet.generateWalletStatusMessage();
 				}
 			}
 		}else {
@@ -538,14 +497,7 @@ public class CallbackQueryHandler extends CommandHandler {
 			Wallet wallet = new Wallet();
 			wallet.getWalletValueByID(walletID);
 			// now generate the message
-			messageText += String.format("Walletadres: `%s`\n", wallet.getWalletAddress());
-			messageText += String.format("Coin: %s\n", wallet.getCoinName().toUpperCase());
-			messageText += String.format("Aantal: `%.8f`\n", wallet.getBalanceCoin());
-			messageText += String.format("Waarde: `€%.2f`\n", wallet.getCurrentValue());
-			double differenceDeposit = wallet.getCurrentValue() - wallet.getTotalDepositedValue();
-			messageText += String.format("Inleg: `€%.2f` (`€%+.2f`)\n", wallet.getTotalDepositedValue(), differenceDeposit);
-			double differenceLastRequest = wallet.getCurrentValue() - wallet.getLastKnownValue();
-			messageText += String.format("Verschil sinds %s: `€%+.2f`\n\n", this.convertTimestampToString(wallet.getLastResultDate()), differenceLastRequest);
+			messageText += wallet.generateWalletStatusMessage();
 			
 		}
 		

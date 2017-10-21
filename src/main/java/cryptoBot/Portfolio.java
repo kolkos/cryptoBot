@@ -1,6 +1,7 @@
 package cryptoBot;
 
 import java.sql.ResultSet;
+import java.text.NumberFormat;
 import java.util.*;
 
 import org.apache.logging.log4j.LogManager;
@@ -143,5 +144,61 @@ public class Portfolio {
 	}
 	
 	
+	
+	public String generatePortfolioStatusMessage(String firstName) {
+		LOG.trace("Entering generatePortfolioStatusMessage()");
+		
+		// first get all the coins 
+		this.getAllCoinsInPortfolio();
+		
+		// now start creating the message
+		String messageText;
+		messageText =  String.format("Hoi %s,\n\n", firstName);
+		messageText += "Op dit moment ziet de totale waarde van het portfolio er als volgt uit:\n";
+		
+		General general = new General();
+		
+		// loop through the coins
+		for(Coin coin : this.coins) {
+			String coinName = coin.getCoinName();
+			double balance = coin.getTotalCoinBalance();
+			double value = coin.getTotalCurrentCoinValue();
+			
+			// convert the balance to a formatted string
+			String balanceFormatted = general.getDutchNumberFormat(balance, "", "", false, 8);
+			
+			// convert the value to a formatted string
+			String formattedValue = general.getDutchNumberFormat(value, "€ ", "", false, 2);
+			
+			// add it to the message
+			messageText += String.format("%s: `%s` (`%s`)\n", coinName, balanceFormatted, formattedValue);
+		}
+		
+		// now calculate the difference to the deposits
+		double totalValue = this.getTotalCurrentValuePortfolio();
+		double depositedValue = this.getTotalDepositedValue();
+		double differenceDepositCurrent = totalValue - depositedValue;
+		
+		// calculate the ROI
+		double roi = (100 * differenceDepositCurrent) / depositedValue;
+		
+		// convert the values to a formatted string
+		String totalValueFormatted = general.getDutchNumberFormat(totalValue, "€ ", "", false, 2);
+		String depositedValueFormatted = general.getDutchNumberFormat(depositedValue, "€ ", "", false, 2);
+		String differenceDepositCurrentFormatted = general.getDutchNumberFormat(differenceDepositCurrent, "€ ", "", true, 2);
+		String roiFormatted = general.getDutchNumberFormat(roi, "", "%", false, 1);
+		
+		// finally append it to the message
+		messageText += String.format("Totale waarde: `%s` (`%s`)\n", totalValueFormatted, differenceDepositCurrentFormatted);
+		messageText += String.format("Ingelegd: `%s`\n", depositedValueFormatted );		
+		messageText += String.format("Rendement: `%s`\n", roiFormatted );
+		
+		
+		
+		
+		
+		LOG.trace("Finished generatePortfolioStatusMessage()");
+		return messageText;
+	}
 	
 }
