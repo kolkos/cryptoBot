@@ -33,7 +33,7 @@ public class Deposit {
 	private long chatID;
 	
 	public void processDepositCommand(long chatID, String depositCommand) {
-		LOG.trace("Entered processDepositCommand(), chatID={}, depositCommand={}", chatID, depositCommand);
+		LOG.trace("Entering processDepositCommand(), chatID={}, depositCommand={}", chatID, depositCommand);
 		
 		this.uuid = UUID.randomUUID().toString();
 		
@@ -67,7 +67,7 @@ public class Deposit {
 	 * @param messageText the text to send to the chat
 	 */
 	private void sendErrorMessage(String messageText) {
-		LOG.trace("Entered sendErrorMessage()");
+		LOG.trace("Entering sendErrorMessage()");
 		
 		CommandHandler commandHandler = new CommandHandler();
 		commandHandler.setChatIDTelegram(this.chatID);
@@ -82,7 +82,7 @@ public class Deposit {
 	 * @param message the prepared message to send
 	 */
 	private void sendMessage(SendMessage message) {
-		LOG.trace("Entered sendMessage()");
+		LOG.trace("Entering sendMessage()");
 		CommandHandler commandHandler = new CommandHandler();
 		commandHandler.sendMessageToChat(message);
 		LOG.trace("Finished sendMessage()");
@@ -94,7 +94,7 @@ public class Deposit {
 	 * @return true if successful, false if failed
 	 */
 	private boolean parseDepositCommand(String depositCommand) {
-		LOG.trace("Entered parseDepositCommand(), depositCommand={}", depositCommand);
+		LOG.trace("Entering parseDepositCommand(), depositCommand={}", depositCommand);
 		/* example deposit command:
 		 * 		/deposit 14-10-2017 38Ee9XUoHp6usVRDKNTdUvS1EUsca3Sb6L 0,01234567 12,34 voorbeeld deposit
 		 */
@@ -190,7 +190,7 @@ public class Deposit {
 	 * has to click on the confirm message to confirm the deposit
 	 */
 	private void registerDeposit() {
-		LOG.trace("Entered registerDeposit()");
+		LOG.trace("Entering registerDeposit()");
 		
 		java.sql.Date sqlDate = new java.sql.Date(this.depositDate.getTime());
 		
@@ -216,7 +216,7 @@ public class Deposit {
 	 * @return id of the deposit in the database
 	 */
 	private int getDepositID(String uuid) {
-		LOG.trace("Entered getDepositID(), uuid={}", uuid);
+		LOG.trace("Entering getDepositID(), uuid={}", uuid);
 		
 		// just to be sure order the deposits descending by id and get only one id
 		String query = "SELECT id FROM deposits WHERE uuid = ? ORDER BY id DESC LIMIT 1";
@@ -244,7 +244,7 @@ public class Deposit {
 	}
 	
 	private SendMessage generateConfirmationMessage() {
-		LOG.trace("Entered generateConfirmationMessage()");
+		LOG.trace("Entering generateConfirmationMessage()");
 		/* example deposit command:
 		 * 		/deposit 14-10-2017 38Ee9XUoHp6usVRDKNTdUvS1EUsca3Sb6L 0,01234567 12,34 remark
 		 */
@@ -288,7 +288,7 @@ public class Deposit {
 	}
 	
 	public void confirmDeposit(int confirm, int depositID) throws Exception {
-		LOG.trace("Entered confirmDeposit(), confirm={}, depositID={}", confirm, depositID);
+		LOG.trace("Entering confirmDeposit(), confirm={}, depositID={}", confirm, depositID);
 		
 		// depending on the value of confirm, the deposit must be deleted or updated
 		// form query based on thos value

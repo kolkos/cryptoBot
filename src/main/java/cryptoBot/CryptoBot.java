@@ -50,7 +50,7 @@ public class CryptoBot extends TelegramLongPollingBot {
 	 */
 	@Override
 	public void onUpdateReceived(Update update) {
-		LOG.trace("entered onUpdateReceived()");
+		LOG.trace("Entering onUpdateReceived()");
 		
 		// handle incoming chat messages
 		if (update.hasMessage() && update.getMessage().hasText()) {
@@ -119,7 +119,7 @@ public class CryptoBot extends TelegramLongPollingBot {
 			callbackQueryHandler.runCallbackQueryCommand();
 
 		}
-		LOG.trace("finished onUpdateReceived()");
+		LOG.trace("Finished onUpdateReceived()");
 	}
 	
 

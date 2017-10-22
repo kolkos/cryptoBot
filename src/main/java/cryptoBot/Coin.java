@@ -79,7 +79,7 @@ public class Coin {
 	 * Method to get the wallet addresses from the database
 	 */
 	private void receiveWalletAddressesForCoin() {
-		LOG.trace("entered receiveWalletAddresses()");
+		LOG.trace("Entering receiveWalletAddresses()");
 		
 		String query = "SELECT wallets.address AS walletAddress " + 
 				"FROM wallets, coins " + 
@@ -103,7 +103,7 @@ public class Coin {
 		} finally {
 			db.close();
 		}
-		LOG.trace("finished receiveWalletAddresses()");
+		LOG.trace("Finished receiveWalletAddresses()");
 		
 	}
 	
@@ -114,7 +114,7 @@ public class Coin {
 	public void getWalletsForCoin(String coinName) {
 		this.setCoinName(coinName);
 		
-		LOG.trace("entered getWalletsForCoin()");
+		LOG.trace("Entering getWalletsForCoin()");
 		
 		this.wallets = new ArrayList<>();
 		// get the wallets for this coin
@@ -146,7 +146,7 @@ public class Coin {
 			
 			LOG.trace("added wallet {} for coin {}", walletAddress, this.coinName);
 		}
-		LOG.trace("finished getWalletsForCoin()");
+		LOG.trace("Finished getWalletsForCoin()");
 		
 	}
 	

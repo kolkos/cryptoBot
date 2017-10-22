@@ -20,7 +20,7 @@ public class AutoRequest extends CryptoBot {
 	
 	
 	private List<Long> getChatIDs(){
-		LOG.trace("Entered getChatIDs()");
+		LOG.trace("Entering getChatIDs()");
 		List<Long> chatIDs = new ArrayList<>();
 		
 		// query the database to get the chat ids
@@ -48,7 +48,7 @@ public class AutoRequest extends CryptoBot {
 	
 	
 	public void runAutomaticRequest() {
-		LOG.trace("Entered runAutomaticRequest()");
+		LOG.trace("Entering runAutomaticRequest()");
 		// get the chatIDS
 		List<Long> chatIDs = this.getChatIDs();
 		// loop through the chat IDs
@@ -96,7 +96,7 @@ public class AutoRequest extends CryptoBot {
 	}
 	
 	private void sendAutomaticStatusUpdate(String messageText, long chatID) {
-		LOG.trace("Entered sendAutomaticStatusUpdate()");
+		LOG.trace("Entering sendAutomaticStatusUpdate()");
 		
 		int from = 1200;
 	    int to = 1300;
@@ -125,6 +125,6 @@ public class AutoRequest extends CryptoBot {
 			LOG.warn("Error sending message, bot not in chat (I guess)");
 		}
 		
-		LOG.trace("Entered sendAutomaticStatusUpdate()");
+		LOG.trace("Finished sendAutomaticStatusUpdate()");
 	}
 }

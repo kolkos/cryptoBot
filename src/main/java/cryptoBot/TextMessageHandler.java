@@ -24,7 +24,7 @@ public class TextMessageHandler extends CommandHandler {
 	 * @param incomingChatMessage the incoming chat message/command
 	 */
 	public void registerChatMessage(long chatIDTelegram, String firstName, String incomingChatMessage) {
-		LOG.trace("entered registerChatMessage(): chat_id={}, firstName={}, incomingChatMessage={}", chatIDTelegram, firstName, incomingChatMessage);
+		LOG.trace("Entering registerChatMessage(): chat_id={}, firstName={}, incomingChatMessage={}", chatIDTelegram, firstName, incomingChatMessage);
 		this.setChatIDTelegram(chatIDTelegram);
 		this.setFirstName(firstName);
 		this.setIncomingMessage(incomingChatMessage);
@@ -32,7 +32,7 @@ public class TextMessageHandler extends CommandHandler {
 	}
 	
 	public void runTextMessageCommand() {
-		LOG.trace("Entered runTextMessageCommand()");
+		LOG.trace("Entering runTextMessageCommand()");
 		
 		// now check if the command starts with a /
 		// if so, check which method has to run
@@ -85,8 +85,10 @@ public class TextMessageHandler extends CommandHandler {
 	}
 	
 	private void sendHelpText() {
+		LOG.trace("Entering sendHelpText()");
 		String helpText = this.generateHelpText();
 		this.sendStringToChat(helpText);
+		LOG.trace("Finished sendHelpText()");
 	}
 	
 //	private void testReplyKeyboard() {
@@ -121,6 +123,8 @@ public class TextMessageHandler extends CommandHandler {
 //	}
 	
 	private void sendTestPic() {
+		LOG.trace("Entering sendTestPic()");
+		
 		SendPhoto sendPhotoRequest = new SendPhoto();
 		String chatID = "-236099150";
 		sendPhotoRequest.setChatId(chatID);
@@ -139,7 +143,7 @@ public class TextMessageHandler extends CommandHandler {
 			e.printStackTrace();
 		}
 		
-		
+		LOG.trace("Finished sendTestPic()");
 		
 	}
 	

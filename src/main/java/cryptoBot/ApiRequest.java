@@ -68,7 +68,7 @@ public class ApiRequest {
 	    // pretty print for debugging
 	    //this.prettyPrintJSON(str);
 	    
-	    LOG.trace("Fished doAPIRequest()");
+	    LOG.trace("Finished doAPIRequest()");
 	    
 	    return jsonObject;
 	}

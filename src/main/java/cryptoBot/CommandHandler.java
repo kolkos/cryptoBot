@@ -112,7 +112,7 @@ public class CommandHandler extends CryptoBot {
 	 * @throws Exception mysql error
 	 */
 	public void registerChat() throws Exception {
-		LOG.trace("entered registerChat()");
+		LOG.trace("Entering registerChat()");
 		
 		// check if the chat is already registered
 		String query = "SELECT chat_id FROM chats WHERE chat_id = ?";
@@ -133,7 +133,7 @@ public class CommandHandler extends CryptoBot {
 		}
 		
 		db.close();
-		LOG.trace("finished registerChat()");
+		LOG.trace("Finished registerChat()");
 	}
 	
 	/**
@@ -143,7 +143,7 @@ public class CommandHandler extends CryptoBot {
 	 * @return true if the chat is allowed, else false
 	 */
 	public boolean checkIfChatIsAllowedToSendRequests() {
-		LOG.trace("entered checkIfChatIsAllowedToSendRequests()");
+		LOG.trace("Entering checkIfChatIsAllowedToSendRequests()");
 		// now check if the chat is in the database and if it is allowed to place requests for this bot
 		String query = "SELECT * FROM chats WHERE chat_id = ? AND active = 1";
 		Object[] parameters = new Object[] {this.chatIDTelegram};
@@ -167,7 +167,7 @@ public class CommandHandler extends CryptoBot {
 			db.close();
 		}
 		// if the code reaches this part, the chat is allowed to send messages
-		LOG.trace("finished checkIfChatIsAllowedToSendRequests()");
+		LOG.trace("Finished checkIfChatIsAllowedToSendRequests()");
 		return true;
 	}
 	
@@ -176,7 +176,7 @@ public class CommandHandler extends CryptoBot {
 	 * @return the ID of the chat in the database
 	 */
 	private int getChatIDFromDB() {
-		LOG.trace("entered getChatIDFromDB()");
+		LOG.trace("Entering getChatIDFromDB()");
 		int chatID = 0;
 		
 		String query = "SELECT id FROM chats WHERE chat_id = ?";
@@ -198,7 +198,7 @@ public class CommandHandler extends CryptoBot {
 			db.close();
 		}
 		
-		LOG.trace("finished getChatIDFromDB()");
+		LOG.trace("Finished getChatIDFromDB()");
 		return chatID;
 	}
 	
@@ -206,7 +206,7 @@ public class CommandHandler extends CryptoBot {
 	 * Register the current request into the database
 	 */
 	public void registerRequestInDatabase() {
-		LOG.trace("entered registerRequestInDatabase()");
+		LOG.trace("Entering registerRequestInDatabase()");
 		
 		this.chatID = this.getChatIDFromDB();
 		String query = "INSERT INTO requests (uuid, chat_id, firstName, command) VALUES (?, ?, ?, ?)";
@@ -220,11 +220,11 @@ public class CommandHandler extends CryptoBot {
 		} finally {
 			db.close();
 		}
-		LOG.trace("finished registerRequestInDatabase()");
+		LOG.trace("Finished registerRequestInDatabase()");
 	}
 	
 	private int getRequestIDFromDB() {
-		LOG.trace("entered getRequestIDFromDB()");
+		LOG.trace("Entering getRequestIDFromDB()");
 		
 		String query = "SELECT id AS requestID FROM requests WHERE uuid = ? ORDER BY id DESC LIMIT 1";
 		Object[] parameters = new Object[] {this.uuid};
@@ -246,7 +246,7 @@ public class CommandHandler extends CryptoBot {
 			db.close();
 		}
 		
-		LOG.trace("finished getRequestIDFromDB()");
+		LOG.trace("Finished getRequestIDFromDB()");
 		return requestID;
 	}
 	
@@ -257,10 +257,10 @@ public class CommandHandler extends CryptoBot {
 	 * @param messageText text to send to the chat
 	 */
 	public void sendStringToChat(String messageText) {
-		LOG.trace("entered sendStringToChat(), messageText={}", messageText);
+		LOG.trace("Entering sendStringToChat(), messageText={}", messageText);
 		SendMessage message = this.generateSimpleSendMessage(messageText);
 		this.sendMessageToChat(message);
-		LOG.trace("finished sendStringToChat()");
+		LOG.trace("Finished sendStringToChat()");
 	}
 	
 	
@@ -270,12 +270,12 @@ public class CommandHandler extends CryptoBot {
 	 * @return prepared SendMessage
 	 */
 	private SendMessage generateSimpleSendMessage(String messageText) {
-		LOG.trace("entered generateSimpleSendMessage(), messageText={}", messageText);
+		LOG.trace("Entering generateSimpleSendMessage(), messageText={}", messageText);
 		
 		SendMessage message = new SendMessage() // Create a message object object
 				.setChatId(this.chatIDTelegram).setText(messageText);
 		
-		LOG.trace("finished generateSimpleSendMessage()");
+		LOG.trace("Finished generateSimpleSendMessage()");
 		
 		message.setParseMode(ParseMode.MARKDOWN);
 		
@@ -287,7 +287,7 @@ public class CommandHandler extends CryptoBot {
 	 * @param message prepared SendMessage
 	 */
 	public void sendMessageToChat(SendMessage message) {
-		LOG.trace("entered sendMessageToChat()");
+		LOG.trace("Entering sendMessageToChat()");
 		
 		try {
 			sendMessage(message); // Sending our message object to user
@@ -298,7 +298,7 @@ public class CommandHandler extends CryptoBot {
 			LOG.fatal("Error sending message: {}", e);
 		}
 		
-		LOG.trace("finished sendMessageToChat()");
+		LOG.trace("Finished sendMessageToChat()");
 	}
 	
 	
@@ -309,7 +309,7 @@ public class CommandHandler extends CryptoBot {
 	 * @return the help text
 	 */
 	protected String generateHelpText() {
-		LOG.trace("entered generateHelpText()");
+		LOG.trace("Entering generateHelpText()");
 		
 		String messageText = "Op dit moment kun je de volgende commando's uitvoeren:\n";
 		messageText += "*/help*\n";
@@ -348,7 +348,7 @@ public class CommandHandler extends CryptoBot {
 		messageText += "  voorbeeld: `eerste aanschaf`\n";
 		messageText += "  opmerking: je mag de opmerking ook gewoon weglaten\n";
 				
-		LOG.trace("finished generateHelpText()");
+		LOG.trace("Finished generateHelpText()");
 		
 		return messageText;
 	}
@@ -362,7 +362,7 @@ public class CommandHandler extends CryptoBot {
 	
 	
 	public void sendBotOptions() {
-		LOG.trace("entered sendBotOptions()");
+		LOG.trace("Entering sendBotOptions()");
 		
 		String messageText = "Maak een uit 1 van de volgende opties:";
 		
@@ -397,7 +397,7 @@ public class CommandHandler extends CryptoBot {
 		// now send this message
 		this.sendMessageToChat(message);
 		
-		LOG.trace("finished sendBotOptions()");
+		LOG.trace("Finished sendBotOptions()");
 	}
 	
 	

@@ -54,7 +54,7 @@ public class Main {
         } catch (TelegramApiException e) {
             e.printStackTrace();
             LOG.fatal("Error starting api: {}, e");
-            System.exit(1);
+            //System.exit(1);
         }
     }
 }

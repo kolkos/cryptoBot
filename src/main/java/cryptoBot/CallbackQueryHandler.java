@@ -59,12 +59,12 @@ public class CallbackQueryHandler extends CommandHandler {
 	 * @param incomingCallbackQuery the value of the inline keyboard button
 	 */
 	public void registerCallbackQuery(long chatIDTelegram, long messageID, String firstName, String incomingCallbackQuery) {
-		LOG.trace("entered registerCallbackQuery(): chat_id={}, messageID={}, firstName={}, incomingCallbackQuery={}", chatIDTelegram, messageID, firstName, incomingCallbackQuery);
+		LOG.trace("Entering registerCallbackQuery(): chat_id={}, messageID={}, firstName={}, incomingCallbackQuery={}", chatIDTelegram, messageID, firstName, incomingCallbackQuery);
 		this.setChatIDTelegram(chatIDTelegram);
 		this.setMessageID(messageID);
 		this.setFirstName(firstName);
 		this.setIncomingMessage(incomingCallbackQuery);
-		LOG.trace("finished registerCallbackQuery()");
+		LOG.trace("Finished registerCallbackQuery()");
 	}
 	
 	/**
@@ -73,14 +73,14 @@ public class CallbackQueryHandler extends CommandHandler {
 	 * @return prepared EditMessage
 	 */
 	private EditMessageText generateSimpleEditMessageText(String messageText) {
-		LOG.trace("entered generateSimpleEditMessageText(), messageText={}", messageText);
+		LOG.trace("Entering generateSimpleEditMessageText(), messageText={}", messageText);
 		
 		EditMessageText message = new EditMessageText()
                 .setChatId(this.getChatIDTelegram())
                 .setMessageId(toIntExact(this.messageID))
                 .setText(messageText);
 		
-		LOG.trace("finished generateSimpleEditMessageText()");
+		LOG.trace("Finished generateSimpleEditMessageText()");
 		
 		return message;
 	}
@@ -90,13 +90,13 @@ public class CallbackQueryHandler extends CommandHandler {
 	 * @param message the prepared EditMessageText
 	 */
 	private void sendEditMessageText(EditMessageText message) {
-		LOG.trace("entered sendEditMessageText()");
+		LOG.trace("Entering sendEditMessageText()");
 		try {
 			editMessageText(message);
 		} catch (TelegramApiException e) {
 			LOG.fatal("error editing chat message {}", e);
 		}
-		LOG.trace("finished sendEditMessageText()");
+		LOG.trace("Finished sendEditMessageText()");
 	}
 	
 	/**
@@ -104,7 +104,7 @@ public class CallbackQueryHandler extends CommandHandler {
 	 * @return a HashMap which contains key/value pairs from the incoming callback query
 	 */
 	private HashMap<String, String> parseCallData(){
-		LOG.trace("entered parseCallData()");
+		LOG.trace("Entering parseCallData()");
 		LOG.trace("callData={}", this.getIncomingMessage());
 		HashMap<String, String> parameters = new HashMap<>();
 		String[] keyValuePairs = this.getIncomingMessage().split(",");
@@ -115,7 +115,7 @@ public class CallbackQueryHandler extends CommandHandler {
 			parameters.put(key, value);
 			LOG.trace("added {} => {}", key, value);
 		}
-		LOG.trace("finished parseCallData()");
+		LOG.trace("Finished parseCallData()");
 		return parameters;
 	}
 	
@@ -127,7 +127,7 @@ public class CallbackQueryHandler extends CommandHandler {
 	 * @return
 	 */
 	private boolean checkCallDataComplete(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
-		LOG.trace("entered checkCallDataComplete(): requiredKeys={}, callDataDetails={}", requiredKeys, callDataDetails);
+		LOG.trace("Entering checkCallDataComplete(): requiredKeys={}, callDataDetails={}", requiredKeys, callDataDetails);
 		
 		// by default the check is OK
 		boolean checkOK = true;
@@ -140,7 +140,7 @@ public class CallbackQueryHandler extends CommandHandler {
 			}
 		}
 		LOG.info("call data check ok: {}", checkOK);
-		LOG.trace("finished checkCallDataComplete()");
+		LOG.trace("Finished checkCallDataComplete()");
 		
 		return checkOK;
 	}
@@ -152,7 +152,7 @@ public class CallbackQueryHandler extends CommandHandler {
 	 * @return
 	 */
 	public void runCallbackQueryCommand() {
-		LOG.trace("entered runCallbackQueryCommand()");
+		LOG.trace("Entering runCallbackQueryCommand()");
 		HashMap<String, String> callDataDetails = this.parseCallData();
 		
 		// message is the object which is returned to the calling method
@@ -215,7 +215,7 @@ public class CallbackQueryHandler extends CommandHandler {
 		// now edit the message with the new prepared message
 		this.sendEditMessageText(message);
 		
-		LOG.trace("finished runCallbackQueryCommand()");
+		LOG.trace("Finished runCallbackQueryCommand()");
 		
 	}
 	
@@ -231,7 +231,7 @@ public class CallbackQueryHandler extends CommandHandler {
 	 * @return status message containing the found coins and the 'all' buttons
 	 */
 	private EditMessageText getPortfolioCoins() {
-		LOG.trace("entered getPortfolioCoins()");
+		LOG.trace("Entering getPortfolioCoins()");
 		
 		String messageText = "Het portfolio bestaat uit de volgende coins. Maak een keuze.";
 		
@@ -273,7 +273,7 @@ public class CallbackQueryHandler extends CommandHandler {
 		markupInline.setKeyboard(rowsInline);
 		message.setReplyMarkup(markupInline);
 		
-		LOG.trace("finished getPortfolioCoins()");
+		LOG.trace("Finished getPortfolioCoins()");
 		
 		return message;
 	}
@@ -313,7 +313,7 @@ public class CallbackQueryHandler extends CommandHandler {
 	 * @return
 	 */
 	private EditMessageText getWalletsForCoin(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
-		LOG.trace("entered getWalletsForCoin()");
+		LOG.trace("Entering getWalletsForCoin()");
 		
 		// check if the call is complete
 		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
@@ -388,7 +388,7 @@ public class CallbackQueryHandler extends CommandHandler {
 		markupInline.setKeyboard(rowsInline);
 		message.setReplyMarkup(markupInline);
 		
-		LOG.trace("finished getWalletsForCoin()");
+		LOG.trace("Finished getWalletsForCoin()");
 		
 		return message;
 		
@@ -400,7 +400,7 @@ public class CallbackQueryHandler extends CommandHandler {
 	 * @return
 	 */
 	private EditMessageText getHelpTextEdit() {
-		LOG.trace("entered getHelpTextEdit()");
+		LOG.trace("Entering getHelpTextEdit()");
 		
 		String messageText = this.generateHelpText();
 		
@@ -409,7 +409,7 @@ public class CallbackQueryHandler extends CommandHandler {
                 .setMessageId(toIntExact(this.messageID))
                 .setText(messageText);
 		
-		LOG.trace("finished getHelpTextEdit()");
+		LOG.trace("Finished getHelpTextEdit()");
 		
 		message.setParseMode(ParseMode.MARKDOWN);
 		
@@ -421,7 +421,7 @@ public class CallbackQueryHandler extends CommandHandler {
 	 * @return the edit message containing the 
 	 */
 	private EditMessageText getTotalPortfolioValue() {
-		LOG.trace("entered getTotalPortfolioValue()");
+		LOG.trace("Entering getTotalPortfolioValue()");
 		
 		// get all the coins in the portfolio
 		Portfolio portfolio = new Portfolio();
@@ -454,7 +454,7 @@ public class CallbackQueryHandler extends CommandHandler {
 	
 	
 	private EditMessageText getWalletValue(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
-		LOG.trace("entered getWalletValue()");
+		LOG.trace("Entering getWalletValue()");
 		
 		// check if the call is complete
 		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
@@ -509,12 +509,12 @@ public class CallbackQueryHandler extends CommandHandler {
                 .setText(messageText);
 		message.setParseMode(ParseMode.MARKDOWN);
 		
-		LOG.trace("finished getWalletValue()");
+		LOG.trace("Finished getWalletValue()");
 		return message;
 	}
 	
 	private EditMessageText confirmDeposit(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
-		LOG.trace("entered confirmDeposit()");
+		LOG.trace("Entering confirmDeposit()");
 		
 		// check if the call is complete
 		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
@@ -546,7 +546,7 @@ public class CallbackQueryHandler extends CommandHandler {
                 .setMessageId(toIntExact(this.messageID))
                 .setText(messageText);
 		
-		LOG.trace("finished confirmDeposit()");
+		LOG.trace("Finished confirmDeposit()");
 		return message;
 	}
 	

@@ -26,7 +26,7 @@ public class General {
 	 * Load the properties (configuration) from the database
 	 */
 	private void loadProperties() {
-		LOG.trace("Entered loadProperties()");
+		LOG.trace("Entering loadProperties()");
 		
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		
@@ -49,17 +49,34 @@ public class General {
 		}catch (IOException e) {
 			LOG.fatal("Error loading config, {}", e);
 		}
-		
+		LOG.trace("Finished loadProperties()");
 	}
 	
+	/**
+	 * Convert the timestamp to a more readable format
+	 * @param timestamp the timestamp to formatted
+	 * @return timestamp formatted dd-MM-yyyy HH:mm:ss
+	 */
 	public String convertTimestampToString(Timestamp timestamp) {
+		LOG.trace("Entering convertTimestampToString(), timestamp={}", timestamp);
 		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 		String dateString = dateFormat.format(timestamp);
-		
+		LOG.trace("Finished convertTimestampToString()");
 		return dateString;
 	}
 	
+	/**
+	 * Format a number to a dutch format
+	 * @param value the value to format
+	 * @param prefix prefix for the number (for example €)
+	 * @param suffix suffix for the number (for example %)
+	 * @param addPlus if true, a plus will be added to a positive number
+	 * @param fractionDigits the number of digitis to round to
+	 * @return formatted number
+	 */
 	public String getDutchNumberFormat(double value, String prefix, String suffix, boolean addPlus, int fractionDigits) {
+		LOG.trace("Entering getDutchNumberFormat(), value={}, prefix={}, suffix={}, addPlus={}, fractionDigits={}", value, prefix, suffix, addPlus, fractionDigits);
+		
 		NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.GERMANY);
 		numberFormat.setGroupingUsed(true);
 		numberFormat.setMinimumFractionDigits(fractionDigits);
@@ -77,6 +94,7 @@ public class General {
 		}
 		
 		// now return the formatted number as a string	
+		LOG.trace("Finished getDutchNumberFormat()");
 		return positiveSign + prefix + numberFormat.format(value) + suffix;
 	}
 		
