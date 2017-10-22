@@ -392,23 +392,23 @@ public class CommandHandler extends CryptoBot {
 		rowsInline.add(rowInline);
 		
 		// create the second line
-		rowInline = new ArrayList<>();
+		//rowInline = new ArrayList<>();
 		rowInline.add(new InlineKeyboardButton().setText("Bekijk portfolio")
 				.setCallbackData("method=getPortfolioCoins"));
-		rowsInline.add(rowInline);
-		
-		// create the third line
-		rowInline = new ArrayList<>();
-		rowInline.add(new InlineKeyboardButton().setText("Help")
-				.setCallbackData("method=editMessageHelpText"));
-		rowsInline.add(rowInline);
-		
-		// create the fourth line
+		//rowsInline.add(rowInline);
+
+		// create the second line
 		rowInline = new ArrayList<>();
 		rowInline.add(new InlineKeyboardButton().setText("Maak grafiek")
 				.setCallbackData("method=showGraphOptions"));
-		rowsInline.add(rowInline);
+		//rowsInline.add(rowInline);
 		
+		// create the third line
+		//rowInline = new ArrayList<>();
+		rowInline.add(new InlineKeyboardButton().setText("Help")
+				.setCallbackData("method=editMessageHelpText"));
+		rowsInline.add(rowInline);
+
 		markupInline.setKeyboard(rowsInline);
 		message.setReplyMarkup(markupInline);
 		
