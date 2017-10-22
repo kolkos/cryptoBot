@@ -144,7 +144,11 @@ public class Portfolio {
 	}
 	
 	
-	
+	/**
+	 * General message to form the portfolio status message
+	 * @param firstName the name of the user which requested it
+	 * @return the status update message
+	 */
 	public String generatePortfolioStatusMessage(String firstName) {
 		LOG.trace("Entering generatePortfolioStatusMessage()");
 		
@@ -192,10 +196,6 @@ public class Portfolio {
 		messageText += String.format("Totale waarde: `%s` (`%s`)\n", totalValueFormatted, differenceDepositCurrentFormatted);
 		messageText += String.format("Ingelegd: `%s`\n", depositedValueFormatted );		
 		messageText += String.format("Rendement: `%s`\n", roiFormatted );
-		
-		
-		
-		
 		
 		LOG.trace("Finished generatePortfolioStatusMessage()");
 		return messageText;

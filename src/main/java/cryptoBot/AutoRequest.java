@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +17,10 @@ public class AutoRequest extends CryptoBot {
 	
 	private static final Logger LOG = LogManager.getLogger(AutoRequest.class);
 	
-	
+	/**
+	 * This method gets a list of the chats which need to receive the automatic update
+	 * @return list of active chat ids
+	 */
 	private List<Long> getChatIDs(){
 		LOG.trace("Entering getChatIDs()");
 		List<Long> chatIDs = new ArrayList<>();
@@ -46,7 +48,9 @@ public class AutoRequest extends CryptoBot {
 	}
 	
 	
-	
+	/**
+	 * Method to run the automatic request.
+	 */
 	public void runAutomaticRequest() {
 		LOG.trace("Entering runAutomaticRequest()");
 		// get the chatIDS
@@ -95,6 +99,12 @@ public class AutoRequest extends CryptoBot {
 		
 	}
 	
+	/**
+	 * This method actually sends the status message to the chat. It only sends a update during the update between 
+	 * two specified hours
+	 * @param messageText the text to send
+	 * @param chatID the id of the chat to send to
+	 */
 	private void sendAutomaticStatusUpdate(String messageText, long chatID) {
 		LOG.trace("Entering sendAutomaticStatusUpdate()");
 		

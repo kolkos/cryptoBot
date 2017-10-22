@@ -223,6 +223,11 @@ public class CommandHandler extends CryptoBot {
 		LOG.trace("Finished registerRequestInDatabase()");
 	}
 	
+	/**
+	 * This method gets the ID of the request from the database. It uses the UUID to find the request
+	 * In the rare case that a UUID isn't unique, it gets the last entry of this key from the database
+	 * @return
+	 */
 	private int getRequestIDFromDB() {
 		LOG.trace("Entering getRequestIDFromDB()");
 		
@@ -361,6 +366,9 @@ public class CommandHandler extends CryptoBot {
 	 */
 	
 	
+	/**
+	 * This message sends the bot options (also known as the menu)
+	 */
 	public void sendBotOptions() {
 		LOG.trace("Entering sendBotOptions()");
 		
@@ -399,30 +407,6 @@ public class CommandHandler extends CryptoBot {
 		
 		LOG.trace("Finished sendBotOptions()");
 	}
-	
-	
-	private String generateOverallValueMessage() {
-		String valueMessage = "";
-		
-		/*
-		 * TODO: 
-		 * 	Per coin:
-		 * 		totale balans
-		 * 	Totaal:
-		 * 		totale waarde portfolio
-		 * 		+/- tov vorige keer opgevraagd
-		 * 		+/- percentage tov vorige keer opgevraagd
-		 * 		Datum vorige keer opgevraagd
-		 * 	Winst/verlies
-		 * 		
-		 * 
-		 */
-		
-		return valueMessage;
-	}
-	
-	
-	
 	
 	
 }

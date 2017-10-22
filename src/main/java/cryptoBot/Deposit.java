@@ -32,6 +32,11 @@ public class Deposit {
 	private String walletAddress;
 	private long chatID;
 	
+	/**
+	 * This method processes the deposit command
+	 * @param chatID the ID of the chat
+	 * @param depositCommand the complete command
+	 */
 	public void processDepositCommand(long chatID, String depositCommand) {
 		LOG.trace("Entering processDepositCommand(), chatID={}, depositCommand={}", chatID, depositCommand);
 		
@@ -287,6 +292,12 @@ public class Deposit {
 		return message;
 	}
 	
+	/**
+	 * This method handles the confirmation of the deposit
+	 * @param confirm confirm 1 = yes, 0 = no
+	 * @param depositID the database ID of the deposit
+	 * @throws Exception SQL error
+	 */
 	public void confirmDeposit(int confirm, int depositID) throws Exception {
 		LOG.trace("Entering confirmDeposit(), confirm={}, depositID={}", confirm, depositID);
 		

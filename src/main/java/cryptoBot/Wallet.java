@@ -252,6 +252,10 @@ public class Wallet {
 		
 	}
 	
+	/**
+	 * This method gets the last known value of the wallet
+	 * @return the last known value of the wallet
+	 */
 	private double getPreviousKnownWalletValue() {
 		LOG.trace("Entering getPreviousKnownWalletValue()");
 		String query = "SELECT results.current_value AS currentValue " + 
@@ -281,6 +285,10 @@ public class Wallet {
 		return lastKnownValue;
 	}
 	
+	/**
+	 * This method gets the date of the last result
+	 * @return the date of the last result
+	 */
 	public Timestamp getLastResultDateFromDB() {
 		String query = "SELECT results.timestamp AS lastResultDate " + 
 				"FROM results, wallets " + 
@@ -311,7 +319,7 @@ public class Wallet {
 	}
 
 	/**
-	 * Register the current result
+	 * Register the current result into the database
 	 */
 	private void registerCurrentResult() {
 		LOG.trace("Entering registerCurrentResult()");
@@ -419,6 +427,10 @@ public class Wallet {
 		LOG.trace("Finished getWalletDataByID()");
 	}
 	
+	/**
+	 * General message to create a status message for the wallet
+	 * @return
+	 */
 	public String generateWalletStatusMessage() {
 		LOG.trace("Entering generateWalletStatusMessage()");
 		

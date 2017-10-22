@@ -447,7 +447,6 @@ public class CallbackQueryHandler extends CommandHandler {
 	 */
 	private String shortenString(String input, int maxLength) {
 		String newString = input.substring(0, Math.min(input.length(), maxLength - 3)) + "...";
-		
 		return newString;
 	}
 	
@@ -513,6 +512,12 @@ public class CallbackQueryHandler extends CommandHandler {
 		return message;
 	}
 	
+	/**
+	 * This method creates the confirm deposit message, It will ask the user to confirm the parsed deposit command
+	 * @param requiredKeys the keys which are needed 
+	 * @param callDataDetails the actual key/value pairs
+	 * @return a Edit Message to confirm the deposit
+	 */
 	private EditMessageText confirmDeposit(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
 		LOG.trace("Entering confirmDeposit()");
 		

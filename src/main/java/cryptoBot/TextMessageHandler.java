@@ -31,6 +31,9 @@ public class TextMessageHandler extends CommandHandler {
 		LOG.trace("finished registerChatMessage()");
 	}
 	
+	/**
+	 * General method to handle the incoming commands
+	 */
 	public void runTextMessageCommand() {
 		LOG.trace("Entering runTextMessageCommand()");
 		
@@ -84,6 +87,9 @@ public class TextMessageHandler extends CommandHandler {
 		LOG.trace("finished runTextMessageCommand()");
 	}
 	
+	/**
+	 * This method sends the help text
+	 */
 	private void sendHelpText() {
 		LOG.trace("Entering sendHelpText()");
 		String helpText = this.generateHelpText();
@@ -122,6 +128,9 @@ public class TextMessageHandler extends CommandHandler {
 //        this.sendMessageToChat(msg);
 //	}
 	
+	/**
+	 * Test method to send a picture
+	 */
 	private void sendTestPic() {
 		LOG.trace("Entering sendTestPic()");
 		
