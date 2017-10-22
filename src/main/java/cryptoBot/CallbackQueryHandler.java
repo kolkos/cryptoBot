@@ -204,6 +204,13 @@ public class CallbackQueryHandler extends CommandHandler {
 			case "editMessageHelpText":
 				message = this.getHelpTextEdit();
 				break;
+			case "showGraphOptions":
+				message = this.showGraphOptions();
+				break;
+			case "createGraph":
+				requiredKeys.add("days");
+				message = this.createGraph(requiredKeys, callDataDetails);
+				break;
 			default:
 				// if the method is not declared (yet) generate a error message
 				message = this.generateSimpleEditMessageText("Ik kan (nog) niets met dit commando!");
@@ -552,6 +559,80 @@ public class CallbackQueryHandler extends CommandHandler {
                 .setText(messageText);
 		
 		LOG.trace("Finished confirmDeposit()");
+		return message;
+	}
+	
+	private EditMessageText showGraphOptions() {
+		String messageText = "Over welke periode wil je de grafiek maken?";
+		
+		// create the message
+		EditMessageText message = new EditMessageText()
+                .setChatId(this.getChatIDTelegram())
+                .setMessageId(toIntExact(this.messageID))
+                .setText(messageText);
+		
+		InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+		List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+		
+		List<InlineKeyboardButton> rowInline = new ArrayList<>();
+		
+		rowInline = new ArrayList<>();
+		rowInline.add(new InlineKeyboardButton().setText("Afgelopen 7 dagen")
+				.setCallbackData("method=createGraph,days=7"));
+		rowsInline.add(rowInline);
+		
+		rowInline = new ArrayList<>();
+		rowInline = new ArrayList<>();
+		rowInline.add(new InlineKeyboardButton().setText("Afgelopen 30 dagen")
+				.setCallbackData("method=createGraph,days=30"));
+		rowsInline.add(rowInline);
+		
+		markupInline.setKeyboard(rowsInline);
+		message.setReplyMarkup(markupInline);
+		
+		
+		return message;
+	}
+	
+	private EditMessageText createGraph(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
+		LOG.trace("Entering createGraph()");
+		
+		// check if the call is complete
+		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
+			// command is not complete, exit the method with an error text
+			EditMessageText message = this.generateSimpleEditMessageText("Sorry het commando van deze knop is niet compleet. #sorrynog");
+			LOG.warn("Not all required keys are found for getWalletsForCoin(). Exiting");
+			return message;
+		}
+		
+		int numberOfDays = Integer.parseInt(callDataDetails.get("days"));
+				
+		// the following message is to disable the menu
+		// first tell the user the chart is being created
+		String messageText = "Grafiek wordt aangemaakt...";
+		
+		// create the message
+		EditMessageText message = new EditMessageText()
+                .setChatId(this.getChatIDTelegram())
+                .setMessageId(toIntExact(this.messageID))
+                .setText(messageText);
+		
+		this.sendEditMessageText(message);
+		
+		// now actually create the chart
+		Chart chart = new Chart();
+		String fileLocation = chart.generateTimeChart(numberOfDays);
+		
+		// send the image
+		this.sendImage(fileLocation);
+	
+		// edit the textMessage
+		messageText = "Grafiek verstuurd.";
+		message = new EditMessageText()
+                .setChatId(this.getChatIDTelegram())
+                .setMessageId(toIntExact(this.messageID))
+                .setText(messageText);
+		
 		return message;
 	}
 	

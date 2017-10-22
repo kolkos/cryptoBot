@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -31,7 +32,7 @@ public class Chart {
 	 * Method to generate a JPEG chart for the deposit/portfolio value
 	 * @param numberOfDays the number of days in the past
 	 */
-	public void generateTimeChart(int numberOfDays) {
+	public String generateTimeChart(int numberOfDays) {
 		LOG.trace("Entering generateTimeChart(), numberOfDays={}", numberOfDays);
 		
 		this.numberOfDays = numberOfDays;
@@ -65,15 +66,20 @@ public class Chart {
         this.plot.setDataset(this.datasetIndex, datasetDeposit);
         this.plot.setRenderer(this.datasetIndex, new StandardXYItemRenderer());
 		
+        String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+        String fileNameChart = "/tmp/" + timeStamp + "_timechart_" + this.numberOfDays + "_days.jpeg";
+        
+        
         int width = 750;   /* Width of the image */
 	    int height = 400;  /* Height of the image */ 
-	    File timeChart = new File( "TimeChart.jpeg" );
+	    File timeChart = new File( fileNameChart );
 	    try {
 			ChartUtilities.saveChartAsJPEG( timeChart, chart, width, height );
 		} catch (IOException e) {
 			LOG.fatal("Error generating jpeg chart, {}", e);
 		}
         
+	    return fileNameChart;
 	}
 	
 	private XYDataset getPortfolioValuesLastXDays() {

@@ -1,5 +1,8 @@
 package cryptoBot;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.telegram.telegrambots.api.methods.ParseMode;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
+import org.telegram.telegrambots.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
@@ -399,6 +403,12 @@ public class CommandHandler extends CryptoBot {
 				.setCallbackData("method=editMessageHelpText"));
 		rowsInline.add(rowInline);
 		
+		// create the fourth line
+		rowInline = new ArrayList<>();
+		rowInline.add(new InlineKeyboardButton().setText("Maak grafiek")
+				.setCallbackData("method=showGraphOptions"));
+		rowsInline.add(rowInline);
+		
 		markupInline.setKeyboard(rowsInline);
 		message.setReplyMarkup(markupInline);
 		
@@ -406,6 +416,30 @@ public class CommandHandler extends CryptoBot {
 		this.sendMessageToChat(message);
 		
 		LOG.trace("Finished sendBotOptions()");
+	}
+	
+	public void sendImage(String fileLocation) {
+		LOG.trace("Entering sendImage()");
+		
+		SendPhoto sendPhotoRequest = new SendPhoto();
+		String chatID = String.valueOf(this.chatIDTelegram);
+		sendPhotoRequest.setChatId(chatID);
+		InputStream inputStream;
+		
+		try {
+			inputStream = new FileInputStream(fileLocation);
+			sendPhotoRequest.setNewPhoto(fileLocation, inputStream);
+			sendPhoto(sendPhotoRequest);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TelegramApiException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		LOG.trace("Finished sendImage()");
 	}
 	
 	

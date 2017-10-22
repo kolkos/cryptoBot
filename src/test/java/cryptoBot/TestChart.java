@@ -9,7 +9,8 @@ public class TestChart {
 	@Test
 	public void test() {
 		Chart chart = new Chart();
-		chart.generateTimeChart(30);
+		String file = chart.generateTimeChart(30);
+		System.out.println(file);
 	}
 
 }
