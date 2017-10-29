@@ -1,5 +1,6 @@
 package cryptoBot;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +14,11 @@ import org.apache.logging.log4j.Logger;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.DateTickUnit;
+import org.jfree.chart.axis.DateTickUnitType;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
@@ -54,24 +60,35 @@ public class Chart {
 		
 		// now create the plot
 		this.plot = chart.getXYPlot();
-        this.plot.setBackgroundPaint(Color.lightGray);
-        this.plot.setDomainGridlinePaint(Color.white);
-        this.plot.setRangeGridlinePaint(Color.white);
+        this.plot.setBackgroundPaint(Color.white);
+        this.plot.setDomainGridlinePaint(Color.lightGray);
+        this.plot.setRangeGridlinePaint(Color.lightGray);
         
-        final ValueAxis axis = this.plot.getDomainAxis();
-        axis.setAutoRange(true);
+        this.plot.getRenderer().setSeriesStroke(0, new BasicStroke(2));
+        this.plot.getRenderer().setSeriesPaint(0, new Color(10,73,220));
+                        
+        //final ValueAxis axis = this.plot.getDomainAxis();
+        //axis.setAutoRange(true);
+        
+        DateAxis axis = (DateAxis) chart.getXYPlot().getDomainAxis();
+		axis.setTickUnit(new DateTickUnit(DateTickUnitType.DAY,1));
+		//axis.setTickMarkPosition(DateTickMarkPosition.START);
+		axis.setDateFormatOverride(new SimpleDateFormat("dd"));
+        
         
         // add the second dataset
         this.datasetIndex++;
         this.plot.setDataset(this.datasetIndex, datasetDeposit);
         this.plot.setRenderer(this.datasetIndex, new StandardXYItemRenderer());
-		
+        
+        
+        
         String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
         String fileNameChart = "/tmp/" + timeStamp + "_timechart_" + this.numberOfDays + "_days.jpeg";
         
         
-        int width = 750;   /* Width of the image */
-	    int height = 400;  /* Height of the image */ 
+        int width = 1200;   /* Width of the image */
+	    int height = 700;  /* Height of the image */ 
 	    File timeChart = new File( fileNameChart );
 	    try {
 			ChartUtilities.saveChartAsJPEG( timeChart, chart, width, height );
@@ -140,7 +157,7 @@ public class Chart {
 			e.printStackTrace();
 		} finally {
 			db.close();
-		}
+		} 
 		
 		return portfolioValue;
 	}
@@ -227,5 +244,8 @@ public class Chart {
 		return depositValue;
 	}
 	
+	private void getValuesLast24Hours() {
+		
+	}
 	
 }

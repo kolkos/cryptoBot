@@ -12,5 +12,17 @@ public class TestChart {
 		String file = chart.generateTimeChart(30);
 		System.out.println(file);
 	}
-
+	
+	@Test
+	public void testChart2() throws Exception {
+		Chart2 chart = new Chart2();
+		chart.createChartByDay(30);
+	}
+	
+	@Test
+	public void dailyGraph() throws Exception {
+		Chart2 chart = new Chart2();
+		chart.generateChartLastXHours(24);
+	}
+ 
 }
