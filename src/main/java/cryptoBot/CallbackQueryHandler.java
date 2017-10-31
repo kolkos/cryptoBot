@@ -583,7 +583,7 @@ public class CallbackQueryHandler extends CommandHandler {
 		
 		rowInline = new ArrayList<>();
 		rowInline.add(new InlineKeyboardButton().setText("Afgelopen 24 uur")
-				.setCallbackData("method=createHourGraph,hours=7"));
+				.setCallbackData("method=createHourGraph,hours=24"));
 		rowsInline.add(rowInline);
 		
 		rowInline = new ArrayList<>();
