@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jfree.data.general.Dataset;
 import org.jfree.data.time.Millisecond;
 import org.knowm.xchart.*;
@@ -17,42 +19,11 @@ import org.knowm.xchart.style.lines.SeriesLines;
 import org.knowm.xchart.style.markers.SeriesMarkers;
 
 public class Chart2 {
-	public void dummyChart() {
-		// create chart
-		XYChart chart = new XYChartBuilder().width(800).height(600).title("Waarde portfolio").xAxisTitle("Datum").yAxisTitle("Waarde").build();
-		
-		Calendar start = Calendar.getInstance();
-		start.add(Calendar.DAY_OF_MONTH, -7);
-		
-		Calendar end = Calendar.getInstance();
-		
-		List<Date> xData = new ArrayList<Date>();
-		List<Double> yData = new ArrayList<Double>();
-		
-		
-		for (Date date = start.getTime(); start.before(end) || start.equals(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
-			System.out.println(date);
-			xData.add(date);
-			yData.add(Math.random() * 3);
-			
-		}
-		
-		// Series
-	    XYSeries series = chart.addSeries("Fake Data", xData, yData);
-	    series.setLineColor(XChartSeriesColors.BLUE);
-	    series.setMarkerColor(Color.ORANGE);
-	    series.setMarker(SeriesMarkers.CIRCLE);
-	    series.setLineStyle(SeriesLines.SOLID);
-	    
-	    try {
-			BitmapEncoder.saveBitmap(chart, "./tmp", BitmapFormat.JPG);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+	private static final Logger LOG = LogManager.getLogger(MySQLAccess.class);
 	
 	private double getAvgDailyPortfolioValueForDate(Date date) {
+		LOG.trace("Entering getAvgDailyPortfolioValueForDate(), date={}", date);
+		
 		double portfolioValue = 0;
 		
 		String query = "SELECT SUM(avgWalletValue) AS avgTotalWalletValue FROM " + 
@@ -86,10 +57,13 @@ public class Chart2 {
 			db.close();
 		}
 		
+		LOG.trace("Finished getAvgDailyPortfolioValueForDate()");
 		return portfolioValue;
 	}
 	
 	private double getDepositedValueForDate(Date date) {
+		LOG.trace("Entering getDepositedValueForDate(), date={}", date);
+		
 		String query = "SELECT SUM(purchase_value) AS totalPurchased FROM deposits WHERE deposit_date = Date(?)";
 		Object[] parameters = new Object[] {date};
 		MySQLAccess db = new MySQLAccess();
@@ -112,11 +86,12 @@ public class Chart2 {
 			db.close();
 		}
 		
-		
+		LOG.trace("Finished getDepositedValueForDate()");
 		return depositValue;
 	}
 	
 	private double getPriorDeposits(Date startDate) {
+		LOG.trace("Entering getPriorDeposits(), startDate={}", startDate);
 		double totalDeposited = 0;
 		
 		String query = "SELECT SUM(purchase_value) AS priorDepositsValue FROM deposits WHERE deposit_date < Date(?)";
@@ -143,7 +118,7 @@ public class Chart2 {
 		return totalDeposited;
 	}
 	
-	public void createChartByDay(int numberOfDays) {
+	public String createChartByDay(int numberOfDays) throws IOException {
 		// create chart
 		XYChart chart = new XYChartBuilder().width(1000).height(600).title("Waarde portfolio").xAxisTitle("Datum").yAxisTitle("Waarde").theme(ChartTheme.GGPlot2).build();
 		
@@ -165,15 +140,12 @@ public class Chart2 {
 		double totalDeposited = this.getPriorDeposits(start.getTime());
 		
 		for (Date date = start.getTime(); start.before(end) || start.equals(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
-			System.out.println(date);
 			
 			double portfolioValue = this.getAvgDailyPortfolioValueForDate(date);
 			double depositValue = this.getDepositedValueForDate(date);
 		    totalDeposited += depositValue;
 			
-		    
-		    
-			xData.add(date);
+		    xData.add(date);
 			yDataPortfolioValue.add(portfolioValue);
 			yDataDepositValue.add(totalDeposited);
 			
@@ -193,13 +165,14 @@ public class Chart2 {
 	    series.setMarkerColor(Color.BLUE);
 	    series.setMarker(SeriesMarkers.DIAMOND);
 	    series.setLineStyle(SeriesLines.SOLID);
-	    	    
-	    try {
-	    		BitmapEncoder.saveBitmap(chart, "./Sample_Chart", BitmapFormat.PNG);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	    	
+	    // generate filename
+	    String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+        String fileNameChart = "/tmp/" + timeStamp + "_timechart_" + numberOfDays + "_days";
+	    
+	    	BitmapEncoder.saveBitmap(chart, fileNameChart, BitmapFormat.PNG);
+		
+	    	return fileNameChart + ".png";
 	}
 	
 	private double getWalletValueForTimestamp(Date start, Date end, int walletID) {
@@ -231,7 +204,7 @@ public class Chart2 {
 		return avgValue;
 	}
 	
-	public void generateChartLastXHours(int numberOfHours) throws Exception {
+	public String generateChartLastXHours(int numberOfHours) throws Exception, IOException {
 		// create chart
 		XYChart chart = new XYChartBuilder().width(1000).height(600).title("Waarde per wallet").xAxisTitle("Tijdstip").yAxisTitle("Waarde").theme(ChartTheme.GGPlot2).build();
 		
@@ -260,7 +233,6 @@ public class Chart2 {
 			String seriesName = String.format("%s (%s)", resultSet.getString("coinName").toUpperCase(), resultSet.getString("walletAddress"));
 			int walletID = resultSet.getInt("walletID");
 			
-			System.out.println(seriesName);
 			
 			Calendar start = Calendar.getInstance();
 			start.add(Calendar.HOUR_OF_DAY, -numberOfHours);
@@ -287,7 +259,6 @@ public class Chart2 {
 				lastMinute.set(Calendar.MINUTE, 59);
 				lastMinute.set(Calendar.SECOND, 59);
 				
-				System.out.println("Zoeken naar waarden tussen " + date + " en " + lastMinute.getTime());
 				
 				// add value to xData
 				double avgValue = this.getWalletValueForTimestamp(date, lastMinute.getTime(), walletID);
@@ -303,27 +274,25 @@ public class Chart2 {
 				
 				yData.add(avgValue);
 				
-				System.out.println(avgValue);
 				
 				
 				
 			}
 			
-			System.out.println("xData: " + xData.size());
-			System.out.println("yData: " + yData.size());
 			
 			// add to series
 			chart.addSeries(seriesName, xData, yData);
 			
 		}
-		// now create the chart
-		try {
-    			BitmapEncoder.saveBitmap(chart, "./Sample_Chart2", BitmapFormat.PNG);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-			
 		
+		// generate filename
+	    String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+        String fileNameChart = "/tmp/" + timeStamp + "_timechart_" + numberOfHours + "_hours";
+		
+		// now create the chart
+		BitmapEncoder.saveBitmap(chart, fileNameChart, BitmapFormat.PNG);
+		
+			
+		return fileNameChart + ".png";
 	}
 }

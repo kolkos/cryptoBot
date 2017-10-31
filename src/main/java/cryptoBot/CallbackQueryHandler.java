@@ -2,6 +2,7 @@ package cryptoBot;
 
 import static java.lang.Math.toIntExact;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -207,9 +208,13 @@ public class CallbackQueryHandler extends CommandHandler {
 			case "showGraphOptions":
 				message = this.showGraphOptions();
 				break;
-			case "createGraph":
+			case "createDayGraph":
 				requiredKeys.add("days");
-				message = this.createGraph(requiredKeys, callDataDetails);
+				message = this.createDayGraph(requiredKeys, callDataDetails);
+				break;
+			case "createHourGraph":
+				requiredKeys.add("hours");
+				message = this.createHourGraph(requiredKeys, callDataDetails);
 				break;
 			default:
 				// if the method is not declared (yet) generate a error message
@@ -577,14 +582,19 @@ public class CallbackQueryHandler extends CommandHandler {
 		List<InlineKeyboardButton> rowInline = new ArrayList<>();
 		
 		rowInline = new ArrayList<>();
+		rowInline.add(new InlineKeyboardButton().setText("Afgelopen 24 uur")
+				.setCallbackData("method=createHourGraph,hours=7"));
+		rowsInline.add(rowInline);
+		
+		rowInline = new ArrayList<>();
 		rowInline.add(new InlineKeyboardButton().setText("Afgelopen 7 dagen")
-				.setCallbackData("method=createGraph,days=7"));
+				.setCallbackData("method=createDayGraph,days=7"));
 		rowsInline.add(rowInline);
 		
 		rowInline = new ArrayList<>();
 		rowInline = new ArrayList<>();
 		rowInline.add(new InlineKeyboardButton().setText("Afgelopen 30 dagen")
-				.setCallbackData("method=createGraph,days=30"));
+				.setCallbackData("method=createDayGraph,days=30"));
 		rowsInline.add(rowInline);
 		
 		markupInline.setKeyboard(rowsInline);
@@ -594,8 +604,8 @@ public class CallbackQueryHandler extends CommandHandler {
 		return message;
 	}
 	
-	private EditMessageText createGraph(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
-		LOG.trace("Entering createGraph()");
+	private EditMessageText createDayGraph(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
+		LOG.trace("Entering createDayGraph()");
 		
 		// check if the call is complete
 		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
@@ -620,19 +630,84 @@ public class CallbackQueryHandler extends CommandHandler {
 		this.sendEditMessageText(message);
 		
 		// now actually create the chart
-		Chart chart = new Chart();
-		String fileLocation = chart.generateTimeChart(numberOfDays);
+		Chart2 chart = new Chart2();
+		String fileLocation;
+		try {
+			fileLocation = chart.createChartByDay(numberOfDays);
+			
+			// send the image
+			this.sendImage(fileLocation);
+			messageText = "Grafiek verstuurd.";
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			LOG.fatal("Error creating chart, {}", e);
+			messageText = "Er ging iets fout bij het maken van de grafiek.";
+		}
 		
-		// send the image
-		this.sendImage(fileLocation);
-	
 		// edit the textMessage
-		messageText = "Grafiek verstuurd.";
 		message = new EditMessageText()
                 .setChatId(this.getChatIDTelegram())
                 .setMessageId(toIntExact(this.messageID))
                 .setText(messageText);
 		
+		
+		LOG.trace("Finished createDayGraph()");
+		return message;
+	}
+	
+	private EditMessageText createHourGraph(List<String> requiredKeys, HashMap<String, String> callDataDetails) {
+		LOG.trace("Entering createHourGraph()");
+		
+		// check if the call is complete
+		if(! this.checkCallDataComplete(requiredKeys, callDataDetails)) {
+			// command is not complete, exit the method with an error text
+			EditMessageText message = this.generateSimpleEditMessageText("Sorry het commando van deze knop is niet compleet. #sorrynog");
+			LOG.warn("Not all required keys are found for getWalletsForCoin(). Exiting");
+			return message;
+		}
+		
+		int numberOfHours = Integer.parseInt(callDataDetails.get("hours"));
+				
+		// the following message is to disable the menu
+		// first tell the user the chart is being created
+		String messageText = "Grafiek wordt aangemaakt...";
+		
+		// create the message
+		EditMessageText message = new EditMessageText()
+                .setChatId(this.getChatIDTelegram())
+                .setMessageId(toIntExact(this.messageID))
+                .setText(messageText);
+		
+		this.sendEditMessageText(message);
+		
+		// now actually create the chart
+		Chart2 chart = new Chart2();
+		String fileLocation;
+		try {
+			fileLocation = chart.generateChartLastXHours(numberOfHours);
+			
+			// send the image
+			this.sendImage(fileLocation);
+			messageText = "Grafiek verstuurd.";
+			
+		} catch (IOException e) {
+
+			LOG.fatal("Error creating chart, {}", e);
+			messageText = "Er ging iets fout bij het maken van de grafiek.";
+		} catch (Exception e) {
+			LOG.fatal("Error creating chart, {}", e);
+			messageText = "Er ging iets fout bij het maken van de grafiek.";
+		}
+		
+		// edit the textMessage
+		message = new EditMessageText()
+                .setChatId(this.getChatIDTelegram())
+                .setMessageId(toIntExact(this.messageID))
+                .setText(messageText);
+		
+		
+		LOG.trace("Finished createHourGraph()");
 		return message;
 	}
 	
