@@ -170,6 +170,9 @@ public class CallbackQueryHandler extends CommandHandler {
 			return;
 		}
 		
+		message = this.generateSimpleEditMessageText("Ik ga kijken wat ik voor je kan doen");
+		this.sendEditMessageText(message);
+		
 		// create a list object for the required keys
 		List<String> requiredKeys = new ArrayList<>();
 		
