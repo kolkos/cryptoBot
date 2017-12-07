@@ -53,6 +53,12 @@ public class TextMessageHandler extends CommandHandler {
 			
 			LOG.info("Received command: {}", command);
 			
+			// check if user is JT
+			if(this.getFirstName().equals("JT")) {
+				this.sendStringToChat("Hoezo heb je nog Facebook?");
+			}
+			
+			
 			// select the correct method based on the command
 			switch(command) {
 				case "/deposit":
