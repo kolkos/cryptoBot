@@ -53,12 +53,6 @@ public class TextMessageHandler extends CommandHandler {
 			
 			LOG.info("Received command: {}", command);
 			
-			// check if user is JT
-			if(this.getFirstName().equals("JT")) {
-				this.sendStringToChat("Hoezo heb je nog Facebook?");
-			}
-			
-			
 			// select the correct method based on the command
 			switch(command) {
 				case "/deposit":
@@ -82,9 +76,9 @@ public class TextMessageHandler extends CommandHandler {
 //				case "/hide":
 //					this.hideKeyboard();
 //					break;
-				case "/pic":
-					this.sendTestPic();
-					break;
+//				case "/pic":
+//					this.sendTestPic();
+//					break;
 				default:
 					this.sendStringToChat("Sorry wat?");
 			}

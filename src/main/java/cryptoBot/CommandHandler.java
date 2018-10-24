@@ -159,7 +159,7 @@ public class CommandHandler extends CryptoBot {
 			// check if the resultset contains something
 			if(! resultSet.next()) {
 				// no results found, this means that the bot isn't allowed to send to this group
-				String messageText = String.format("Hoi! Wij kennen elkaar nog niet. Vraag even aan Anton (@Kolkos) of hij deze chat wil activeren. Vermeld dit chatID: %d", this.chatIDTelegram);
+				String messageText = String.format("Sorry, ik kan je niet helpen.");
 				this.sendStringToChat(messageText);
 				return false;
 			}

@@ -16,7 +16,6 @@ public class MySQLAccess {
 	private Statement statement = null;
 	private PreparedStatement preparedStatement = null;
 	private ResultSet resultSet = null;
-	private List<HashMap<String, String>> results;
 	
 	private static final Logger LOG = LogManager.getLogger(MySQLAccess.class);
 	
@@ -34,7 +33,7 @@ public class MySQLAccess {
 		String pass = "cryptoBot";
 		String db = "cryptoBot";
 		
-		String url = "jdbc:mysql://192.168.178.7/" + db + "?user=" + user + "&password=" + pass;
+		String url = "jdbc:mysql://localhost:3306/" + db + "?user=" + user + "&password=" + pass;
 		
 		LOG.trace("mysql url: {}", url);
 		
