@@ -196,6 +196,7 @@ public class Portfolio {
 		messageText += String.format("Totale waarde: `%s` (`%s`)\n", totalValueFormatted, differenceDepositCurrentFormatted);
 		messageText += String.format("Ingelegd: `%s`\n", depositedValueFormatted );		
 		messageText += String.format("Rendement: `%s`\n", roiFormatted );
+		messageText += "#cryptowaarde";
 		
 		LOG.trace("Finished generatePortfolioStatusMessage()");
 		return messageText;
